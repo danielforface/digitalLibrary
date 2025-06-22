@@ -30,7 +30,7 @@ export default function ItemDialog({ dialogState, onClose, onSubmit, allCategori
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl md:max-w-3xl">
+      <DialogContent className="w-[95vw] max-w-sm sm:max-w-xl md:max-w-3xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
