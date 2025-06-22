@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -24,7 +25,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from './ui/button';
-import { MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Download } from 'lucide-react';
 import type { ArchiveItem } from '@/lib/types';
 import FileIcon from './file-icon';
 import { formatDistanceToNow } from 'date-fns';
@@ -82,6 +83,15 @@ export default function ArchiveCard({ item, onView, onEdit, onDelete }: ArchiveC
                 <Edit className="mr-2 h-4 w-4" />
                 <span>Edit</span>
               </DropdownMenuItem>
+              {item.url && (
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <a href={item.url} download={item.title}>
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Download</span>
+                  </a>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
                   <Trash2 className="mr-2 h-4 w-4" />
