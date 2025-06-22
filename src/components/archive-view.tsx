@@ -1,7 +1,10 @@
+'use client';
+
+import { useState } from 'react';
 import type { ArchiveItem } from '@/lib/types';
 import ArchiveCard from './archive-card';
 import { Button } from './ui/button';
-import { Menu, Upload } from 'lucide-react';
+import { Menu, Upload, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from './ui/badge';
 
 type ArchiveViewProps = {
@@ -18,6 +21,11 @@ type ArchiveViewProps = {
 };
 
 export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag }: ArchiveViewProps) {
+  const [tagsExpanded, setTagsExpanded] = useState(false);
+
+  const TAG_LIMIT = 5;
+  const visibleTags = tagsExpanded ? availableTags : availableTags.slice(0, TAG_LIMIT);
+
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <header className="flex items-center justify-between mb-6">
@@ -35,30 +43,41 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete,
       </header>
 
       {availableTags.length > 0 && (
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <button
-            onClick={() => onSelectTag(null)}
-            className={`px-3 py-1 text-sm rounded-full transition-colors ${
-              !selectedTag
-                ? 'bg-secondary text-secondary-foreground font-semibold'
-                : 'bg-secondary/50 hover:bg-secondary'
-            }`}
-          >
-            All Tags
-          </button>
-          {availableTags.map(tag => (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
-              key={tag}
-              onClick={() => onSelectTag(tag)}
+              onClick={() => onSelectTag(null)}
               className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                selectedTag === tag
+                !selectedTag
                   ? 'bg-secondary text-secondary-foreground font-semibold'
                   : 'bg-secondary/50 hover:bg-secondary'
               }`}
             >
-              {tag}
+              All Tags
             </button>
-          ))}
+            {visibleTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => onSelectTag(tag)}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  selectedTag === tag
+                    ? 'bg-secondary text-secondary-foreground font-semibold'
+                    : 'bg-secondary/50 hover:bg-secondary'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+            {availableTags.length > TAG_LIMIT && (
+              <button
+                onClick={() => setTagsExpanded(!tagsExpanded)}
+                className="flex items-center gap-1 px-3 py-1 text-sm rounded-full text-muted-foreground hover:bg-secondary/80 transition-colors"
+              >
+                {tagsExpanded ? 'Show less' : `Show ${availableTags.length - TAG_LIMIT} more`}
+                {tagsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+            )}
+          </div>
         </div>
       )}
       
