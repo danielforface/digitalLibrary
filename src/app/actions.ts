@@ -31,10 +31,15 @@ async function writeData(data: ArchiveItem[]): Promise<void> {
 }
 
 export async function getArchiveItems(): Promise<ArchiveItem[]> {
-    return await readData();
+    try {
+        return await readData();
+    } catch (error) {
+        console.error("[ACTION_GET_ITEMS]", error);
+        return [];
+    }
 }
 
-export async function createArchiveItem(formData: FormData) {
+export async function createArchiveItem(formData: FormData): Promise<ArchiveItem> {
   try {
     const data = await readData();
 
@@ -45,6 +50,10 @@ export async function createArchiveItem(formData: FormData) {
     const tagsString = formData.get('tags') as string;
     const content = formData.get('content') as string | undefined;
     const file = formData.get('file') as File | null;
+    
+    if (!title || !category || !description || !type) {
+        throw new Error("Missing required fields: title, category, description, type.");
+    }
     
     const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
@@ -77,21 +86,21 @@ export async function createArchiveItem(formData: FormData) {
     await writeData(data);
 
     revalidatePath('/');
-    return { success: true, item: newItem };
+    return newItem;
   } catch (error) {
     console.error('[ACTION_CREATE_ITEM]', error);
-    return { success: false, message: 'An unexpected error occurred while creating the item.' };
+    throw new Error('An unexpected error occurred while creating the item.');
   }
 }
 
 
-export async function updateArchiveItem(id: string, formData: FormData) {
+export async function updateArchiveItem(id: string, formData: FormData): Promise<ArchiveItem> {
     try {
         const data = await readData();
         const itemIndex = data.findIndex(item => item.id === id);
 
         if (itemIndex === -1) {
-            return { success: false, message: 'Item not found' };
+            throw new Error('Item not found');
         }
 
         const currentItem = data[itemIndex];
@@ -128,12 +137,12 @@ export async function updateArchiveItem(id: string, formData: FormData) {
 
         const updatedItem: ArchiveItem = {
             ...currentItem,
-            title,
-            category,
-            description,
-            type,
+            title: title || currentItem.title,
+            category: category || currentItem.category,
+            description: description || currentItem.description,
+            type: type || currentItem.type,
             tags,
-            content: content || currentItem.content,
+            content: content !== undefined ? content : currentItem.content,
             url: itemUrl,
             updatedAt: new Date().toISOString(),
         };
@@ -142,22 +151,22 @@ export async function updateArchiveItem(id: string, formData: FormData) {
         await writeData(data);
         
         revalidatePath('/');
-        return { success: true, item: updatedItem };
+        return updatedItem;
 
     } catch (error) {
         console.error('[ACTION_UPDATE_ITEM]', error);
-        return { success: false, message: 'An unexpected error occurred while updating the item.' };
+        throw new Error('An unexpected error occurred while updating the item.');
     }
 }
 
 
-export async function deleteArchiveItem(id: string) {
+export async function deleteArchiveItem(id: string): Promise<void> {
     try {
         const data = await readData();
         const itemIndex = data.findIndex(item => item.id === id);
 
         if (itemIndex === -1) {
-            return { success: false, message: 'Item not found' };
+            throw new Error('Item not found');
         }
 
         const itemToDelete = data[itemIndex];
@@ -175,9 +184,8 @@ export async function deleteArchiveItem(id: string) {
         await writeData(data);
         
         revalidatePath('/');
-        return { success: true };
     } catch (error) {
         console.error('[ACTION_DELETE_ITEM]', error);
-        return { success: false, message: 'An unexpected error occurred while deleting the item.' };
+        throw new Error('An unexpected error occurred while deleting the item.');
     }
 }

@@ -97,27 +97,18 @@ export default function DigitalArchiveApp() {
     });
 
     try {
-      let result;
       if (dialogState.mode === 'edit' && dialogState.item) {
-        result = await updateArchiveItem(dialogState.item.id, apiFormData);
-      } else {
-        result = await createArchiveItem(apiFormData);
-      }
-
-      if (!result.success || !result.item) {
-        throw new Error(result.message || 'An unknown error occurred');
-      }
-      
-      if (dialogState.mode === 'new') {
-        setItems(prevItems => [result.item!, ...prevItems]);
-        toast({ title: "Success", description: "Item added to your archive." });
-      } else {
+        const updatedItem = await updateArchiveItem(dialogState.item.id, apiFormData);
         setItems(prevItems =>
           prevItems.map(item =>
-            item.id === result.item!.id ? result.item! : item
+            item.id === updatedItem.id ? updatedItem : item
           )
         );
         toast({ title: "Success", description: "Item updated." });
+      } else {
+        const newItem = await createArchiveItem(apiFormData);
+        setItems(prevItems => [newItem, ...prevItems]);
+        toast({ title: "Success", description: "Item added to your archive." });
       }
 
       handleCloseDialog();
@@ -134,11 +125,7 @@ export default function DigitalArchiveApp() {
 
   const handleDelete = async (itemId: string) => {
     try {
-      const result = await deleteArchiveItem(itemId);
-      if (!result.success) {
-        throw new Error(result.message || 'Failed to delete the item.');
-      }
-      
+      await deleteArchiveItem(itemId);
       setItems(prevItems => prevItems.filter(item => item.id !== itemId));
       toast({ title: "Item Deleted", description: "The item has been removed from your archive.", variant: 'destructive' });
 
