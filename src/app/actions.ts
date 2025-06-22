@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache';
 import fs from 'fs/promises';
 import path from 'path';
 import type { ArchiveItem } from '@/lib/types';
+import { remark } from 'remark';
+import strip from 'strip-markdown';
 
 const jsonPath = path.resolve(process.cwd(), 'archive-data.json');
 const uploadsPath = path.resolve(process.cwd(), 'public/uploads');
@@ -45,7 +47,7 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
 
     const title = formData.get('title') as string;
     const category = formData.get('category') as string;
-    const description = formData.get('description') as string;
+    let description = formData.get('description') as string;
     const type = formData.get('type') as ArchiveItem['type'];
     const tagsString = formData.get('tags') as string;
     const content = formData.get('content') as string | undefined;
@@ -53,6 +55,12 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
     
     if (!title || !category || !description || !type) {
         throw new Error("Missing required fields: title, category, description, type.");
+    }
+
+    if (type === 'text' && content) {
+        const processed = await remark().use(strip).process(content);
+        const plainText = String(processed).trim();
+        description = plainText.substring(0, 150) || description;
     }
     
     const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
@@ -110,11 +118,17 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
 
         const title = formData.get('title') as string;
         const category = formData.get('category') as string;
-        const description = formData.get('description') as string;
+        let description = formData.get('description') as string;
         const type = formData.get('type') as ArchiveItem['type'];
         const tagsString = formData.get('tags') as string;
         const content = formData.get('content') as string | undefined;
         const file = formData.get('file') as File | null;
+
+        if (type === 'text' && content) {
+            const processed = await remark().use(strip).process(content);
+            const plainText = String(processed).trim();
+            description = plainText.substring(0, 150) || description;
+        }
 
         const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
         

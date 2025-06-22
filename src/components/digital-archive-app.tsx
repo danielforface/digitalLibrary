@@ -74,7 +74,7 @@ export default function DigitalArchiveApp() {
   };
 
   const handleViewItem = (item: ArchiveItem) => {
-    if (item.type === 'pdf' && item.url) {
+    if ((item.type === 'pdf' || item.type === 'image') && item.url) {
       window.open(item.url, '_blank')?.focus();
     } else {
       handleOpenDialog('view', item);
@@ -88,6 +88,7 @@ export default function DigitalArchiveApp() {
   const handleSubmit = async (formData: UploadFormData) => {
     setIsSubmitting(true);
     const apiFormData = new FormData();
+
     Object.entries(formData).forEach(([key, value]) => {
       if (key === 'file') {
         if (value instanceof FileList && value.length > 0) {
