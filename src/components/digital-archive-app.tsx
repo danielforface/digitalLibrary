@@ -114,10 +114,18 @@ export default function DigitalArchiveApp() {
       handleCloseDialog();
     } catch (error) {
       console.error("Error submitting form:", error);
+      let description = 'Could not save the item.';
+      if (error instanceof Error) {
+        if (error.message.includes('fetch') || error.message.includes('unexpected response')) {
+          description = `The file may be too large or there was a network issue. The server limit is 50MB. Please try again.`;
+        } else {
+          description = error.message;
+        }
+      }
       toast({
         variant: 'destructive',
         title: 'Submission Error',
-        description: (error as Error).message || 'Could not save the item.',
+        description: description,
       });
     }
   };
@@ -134,7 +142,7 @@ export default function DigitalArchiveApp() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: (error as Error).message || 'Could not delete the item.',
+        description: (error instanceof Error) ? error.message : 'Could not delete the item.',
       });
     }
   };
