@@ -7,6 +7,7 @@ import AppSidebar from '@/components/app-sidebar';
 import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 type DialogState = {
   open: boolean;
@@ -18,6 +19,7 @@ export default function DigitalArchiveApp() {
   const [items, setItems] = useState<ArchiveItem[]>(initialData);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [dialogState, setDialogState] = useState<DialogState>({ open: false, mode: 'new' });
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
 
   const categories = useMemo(() => ['All', ...new Set(items.map(item => item.category))], [items]);
@@ -63,13 +65,30 @@ export default function DigitalArchiveApp() {
     toast({ title: "Item Deleted", description: "The item has been removed from your archive.", variant: 'destructive' });
   };
 
+  const handleSelectCategory = (category: string) => {
+    setSelectedCategory(category);
+    setMobileMenuOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <AppSidebar
+        className="hidden md:flex"
         categories={categories}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
+      
+      <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="p-0">
+          <AppSidebar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={handleSelectCategory}
+          />
+        </SheetContent>
+      </Sheet>
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <ArchiveView
           items={filteredItems}
@@ -78,6 +97,7 @@ export default function DigitalArchiveApp() {
           onEdit={(item) => handleOpenDialog('edit', item)}
           onDelete={handleDelete}
           categoryTitle={selectedCategory}
+          onMenuClick={() => setMobileMenuOpen(true)}
         />
       </div>
       <ItemDialog

@@ -1,7 +1,7 @@
 import type { ArchiveItem } from '@/lib/types';
 import ArchiveCard from './archive-card';
 import { Button } from './ui/button';
-import { Upload } from 'lucide-react';
+import { Menu, Upload } from 'lucide-react';
 
 type ArchiveViewProps = {
   items: ArchiveItem[];
@@ -10,13 +10,20 @@ type ArchiveViewProps = {
   onEdit: (item: ArchiveItem) => void;
   onDelete: (itemId: string) => void;
   categoryTitle: string;
+  onMenuClick: () => void;
 };
 
-export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete, categoryTitle }: ArchiveViewProps) {
+export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete, categoryTitle, onMenuClick }: ArchiveViewProps) {
   return (
     <main className="flex-1 overflow-y-auto p-6">
       <header className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-headline font-semibold">{categoryTitle}</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Open Menu</span>
+          </Button>
+          <h2 className="text-3xl font-headline font-semibold">{categoryTitle}</h2>
+        </div>
         <Button onClick={onUpload}>
           <Upload className="mr-2 h-4 w-4" />
           Upload Content
@@ -36,7 +43,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete,
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center h-[60vh] border-2 border-dashed rounded-lg">
+        <div className="flex flex-col items-center justify-center h-[60vh] border-2 border-dashed rounded-lg text-center p-4">
             <p className="text-muted-foreground text-lg">No items in this category.</p>
             <p className="text-muted-foreground">Upload something to get started!</p>
         </div>
