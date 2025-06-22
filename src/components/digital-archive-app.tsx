@@ -13,6 +13,7 @@ import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveIte
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
 import MoveItemDialog from './move-item-dialog';
+import AddCategoryDialog from './add-category-dialog';
 
 function buildCategoryTree(items: ArchiveItem[], extraCategoryPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
@@ -76,6 +77,7 @@ export default function DigitalArchiveApp() {
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
+  const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -220,20 +222,34 @@ export default function DigitalArchiveApp() {
     setMobileMenuOpen(false);
   };
 
-  const handleAddCategory = (parentPath: string) => {
-    const newCategoryName = window.prompt(`Enter name for new category inside "${parentPath || 'Root'}":`);
-    if (newCategoryName && !newCategoryName.includes('/')) {
-      const newPath = parentPath ? `${parentPath}/${newCategoryName}` : newCategoryName;
-      if (allCategoryPaths.includes(newPath)) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Category already exists.' });
-        return;
-      }
-      setExtraCategories(prev => [...prev, newPath]);
-      toast({ title: 'Category Added', description: `"${newPath}" is ready to be used.`});
-    } else if (newCategoryName) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Category name cannot contain slashes.' });
-    }
+  const handleAddCategoryRequest = (parentPath: string) => {
+    setAddCategoryParentPath(parentPath);
   };
+
+  const handleConfirmAddCategory = (newCategoryName: string) => {
+    if (addCategoryParentPath === null) return;
+
+    if (newCategoryName.includes('/')) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Category name cannot contain slashes.' });
+        return;
+    }
+    
+    const newPath = addCategoryParentPath ? `${addCategoryParentPath}/${newCategoryName}` : newCategoryName;
+
+    if (allCategoryPaths.includes(newPath)) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Category already exists.' });
+      return;
+    }
+
+    setExtraCategories(prev => [...prev, newPath]);
+    toast({ title: 'Category Added', description: `"${newPath}" is ready to be used.`});
+    setAddCategoryParentPath(null); // Close dialog
+  };
+
+  const handleCloseAddCategoryDialog = () => {
+    setAddCategoryParentPath(null);
+  };
+
 
   const handleDeleteCategoryRequest = (node: CategoryNode) => {
     // For categories with items, open the dialog.
@@ -321,7 +337,7 @@ export default function DigitalArchiveApp() {
         categoryTree={categoryTree}
         selectedCategory={selectedCategory}
         onSelectCategory={handleSelectCategory}
-        onAddCategory={handleAddCategory}
+        onAddCategory={handleAddCategoryRequest}
         onDeleteCategory={handleDeleteCategoryRequest}
       />
       
@@ -335,7 +351,7 @@ export default function DigitalArchiveApp() {
             categoryTree={categoryTree}
             selectedCategory={selectedCategory}
             onSelectCategory={handleSelectCategory}
-            onAddCategory={handleAddCategory}
+            onAddCategory={handleAddCategoryRequest}
             onDeleteCategory={handleDeleteCategoryRequest}
           />
         </SheetContent>
@@ -377,6 +393,12 @@ export default function DigitalArchiveApp() {
           allCategoryPaths={allCategoryPaths}
           onConfirmMove={handleConfirmMove}
           isSubmitting={isSubmitting}
+      />
+      <AddCategoryDialog
+        isOpen={addCategoryParentPath !== null}
+        onClose={handleCloseAddCategoryDialog}
+        onConfirm={handleConfirmAddCategory}
+        parentPath={addCategoryParentPath ?? ''}
       />
     </div>
   );
