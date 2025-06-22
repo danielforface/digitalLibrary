@@ -7,7 +7,7 @@ import AppSidebar from '@/components/app-sidebar';
 import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 type DialogState = {
   open: boolean;
@@ -81,6 +81,12 @@ export default function DigitalArchiveApp() {
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="p-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Menu</SheetTitle>
+            <SheetDescription>
+              Main application navigation menu.
+            </SheetDescription>
+          </SheetHeader>
           <AppSidebar
             categories={categories}
             selectedCategory={selectedCategory}
