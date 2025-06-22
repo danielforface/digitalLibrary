@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
         await fs.mkdir(uploadsPath, { recursive: true });
         const fileBuffer = Buffer.from(await file.arrayBuffer());
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        const filename = `${uniqueSuffix}-${file.name.replace(/\s+/g, '_')}`;
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filename = `${uniqueSuffix}-${sanitizedName}`;
         await fs.writeFile(path.join(uploadsPath, filename), fileBuffer);
         itemUrl = `/uploads/${filename}`;
       } catch (error) {
