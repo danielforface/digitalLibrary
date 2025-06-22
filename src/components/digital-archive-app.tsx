@@ -9,15 +9,15 @@ import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import type { UploadFormData } from './upload-form';
-import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem } from '@/app/actions';
+import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
 import MoveItemDialog from './move-item-dialog';
 import AddCategoryDialog from './add-category-dialog';
 
-function buildCategoryTree(items: ArchiveItem[], extraCategoryPaths: string[]): CategoryNode {
+function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
-  const allPaths = [...new Set([...items.map(i => i.category), ...extraCategoryPaths])].filter(Boolean);
+  const allPaths = [...new Set([...items.map(i => i.category), ...persistedPaths])].filter(Boolean);
   
   const nodes: Record<string, CategoryNode> = { '': root };
 
@@ -42,12 +42,14 @@ function buildCategoryTree(items: ArchiveItem[], extraCategoryPaths: string[]): 
     }
   });
 
+  // Count items for each category directly
   items.forEach(item => {
     if (item.category && nodes[item.category]) {
       nodes[item.category].itemCount++;
     }
   });
 
+  // Sum counts up the tree
   function sumCounts(node: CategoryNode): number {
     const childCounts = node.children.reduce((sum, child) => sum + sumCounts(child), 0);
     node.itemCount += childCounts;
@@ -67,6 +69,7 @@ type DialogState = {
 
 export default function DigitalArchiveApp() {
   const [items, setItems] = useState<ArchiveItem[]>([]);
+  const [persistedCategories, setPersistedCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -74,18 +77,21 @@ export default function DigitalArchiveApp() {
   const [dialogState, setDialogState] = useState<DialogState>({ open: false, mode: 'new' });
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
-  const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
   const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchAllData = async () => {
       try {
         setIsLoading(true);
-        const data = await getArchiveItems();
-        setItems(data);
+        const [itemData, categoryData] = await Promise.all([
+          getArchiveItems(),
+          getCategoryPaths(),
+        ]);
+        setItems(itemData);
+        setPersistedCategories(categoryData);
       } catch (error) {
         console.error(error);
         toast({
@@ -97,10 +103,10 @@ export default function DigitalArchiveApp() {
         setIsLoading(false);
       }
     };
-    fetchItems();
+    fetchAllData();
   }, [toast]);
 
-  const categoryTree = useMemo(() => buildCategoryTree(items, extraCategories), [items, extraCategories]);
+  const categoryTree = useMemo(() => buildCategoryTree(items, persistedCategories), [items, persistedCategories]);
 
   const allCategoryPaths = useMemo(() => {
     const paths = new Set<string>();
@@ -143,7 +149,7 @@ export default function DigitalArchiveApp() {
   const handleViewItem = (item: ArchiveItem) => {
     if (item.type === 'audio' && item.url) {
       setNowPlaying(item);
-    } else if ((item.type === 'pdf' || item.type === 'image' || item.type === 'video') && item.url) {
+    } else if (item.url && ['pdf', 'image', 'video'].includes(item.type)) {
       window.open(item.url, '_blank')?.focus();
     } else {
       handleOpenDialog('view', item);
@@ -182,9 +188,9 @@ export default function DigitalArchiveApp() {
         setItems(prevItems => [newItem, ...prevItems]);
         toast({ title: "Success", description: "Item added to your archive." });
       }
-      // Remove from extra categories if it was one
-      if (formData.category) {
-        setExtraCategories(prev => prev.filter(p => p !== formData.category));
+
+      if (formData.category && !persistedCategories.includes(formData.category)) {
+        setPersistedCategories(prev => [...prev, formData.category!].sort());
       }
       handleCloseDialog();
     } catch (error) {
@@ -226,7 +232,7 @@ export default function DigitalArchiveApp() {
     setAddCategoryParentPath(parentPath);
   };
 
-  const handleConfirmAddCategory = (newCategoryName: string) => {
+  const handleConfirmAddCategory = async (newCategoryName: string) => {
     if (addCategoryParentPath === null) return;
 
     if (newCategoryName.includes('/')) {
@@ -241,9 +247,14 @@ export default function DigitalArchiveApp() {
       return;
     }
 
-    setExtraCategories(prev => [...prev, newPath]);
-    toast({ title: 'Category Added', description: `"${newPath}" is ready to be used.`});
-    setAddCategoryParentPath(null); // Close dialog
+    try {
+      await addCategoryPath(newPath);
+      setPersistedCategories(prev => [...prev, newPath].sort());
+      toast({ title: 'Category Added', description: `"${newPath}" is ready to be used.`});
+      setAddCategoryParentPath(null);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+    }
   };
 
   const handleCloseAddCategoryDialog = () => {
@@ -251,17 +262,20 @@ export default function DigitalArchiveApp() {
   };
 
 
-  const handleDeleteCategoryRequest = (node: CategoryNode) => {
-    // For categories with items, open the dialog.
+  const handleDeleteCategoryRequest = async (node: CategoryNode) => {
     if (node.itemCount > 0) {
       setCategoryToDelete(node);
     } else {
-        // For empty categories, confirm and remove from state.
-        if(window.confirm(`Are you sure you want to delete the empty category "${node.path}"?`)) {
-            setExtraCategories(prev => prev.filter(p => p !== node.path && !p.startsWith(`${node.path}/`)));
-            toast({ title: 'Empty category removed.' });
-            if (selectedCategory === node.path) {
-                setSelectedCategory('All');
+        if(window.confirm(`Are you sure you want to delete the empty category "${node.path}"? This cannot be undone.`)) {
+            try {
+                await deleteEmptyCategory(node.path);
+                setPersistedCategories(prev => prev.filter(p => p !== node.path && !p.startsWith(`${node.path}/`)));
+                toast({ title: 'Empty category removed.' });
+                if (selectedCategory.startsWith(node.path)) {
+                    setSelectedCategory('All');
+                }
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
             }
         }
     }
@@ -270,14 +284,11 @@ export default function DigitalArchiveApp() {
   const handleCloseDeleteDialog = () => {
       const path = categoryToDelete?.path;
       setCategoryToDelete(null);
-      // After action, we may need to remove from extraCategories if it's now empty.
-      if (path) {
-          const isCategoryEmpty = !items.some(item => item.category.startsWith(path));
-          if(isCategoryEmpty) {
-            setExtraCategories(prev => prev.filter(p => p !== path && !p.startsWith(`${path}/`)));
-          }
+      // The action revalidates the path, so data will be refetched.
+      // We just need to navigate away if the current category was deleted.
+      if (path && (selectedCategory === path || selectedCategory.startsWith(`${path}/`))) {
+          setSelectedCategory('All');
       }
-      setSelectedCategory('All'); // Reselect All to be safe
   };
 
   const handleMoveRequest = (item: ArchiveItem) => {

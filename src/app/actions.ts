@@ -9,6 +9,7 @@ import { remark } from 'remark';
 import strip from 'strip-markdown';
 
 const jsonPath = path.resolve(process.cwd(), 'archive-data.json');
+const categoriesJsonPath = path.resolve(process.cwd(), 'categories.json');
 const uploadsPath = path.resolve(process.cwd(), 'public/uploads');
 
 async function readData(): Promise<ArchiveItem[]> {
@@ -30,6 +31,66 @@ async function readData(): Promise<ArchiveItem[]> {
 
 async function writeData(data: ArchiveItem[]): Promise<void> {
   await fs.writeFile(jsonPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+// New functions for categories persistence
+async function readCategories(): Promise<string[]> {
+  try {
+    // Ensure the file exists before reading
+    await fs.access(categoriesJsonPath).catch(async () => {
+        await fs.writeFile(categoriesJsonPath, JSON.stringify([], null, 2), 'utf-8');
+    });
+    const fileContent = await fs.readFile(categoriesJsonPath, 'utf-8');
+    if (fileContent.trim() === '') return [];
+    return JSON.parse(fileContent);
+  } catch (error) {
+    console.error("Error reading categories:", error);
+    throw new Error('Failed to read category data.');
+  }
+}
+
+async function writeCategories(paths: string[]): Promise<void> {
+  const uniqueSortedPaths = [...new Set(paths)].sort();
+  await fs.writeFile(categoriesJsonPath, JSON.stringify(uniqueSortedPaths, null, 2), 'utf-8');
+}
+
+export async function getCategoryPaths(): Promise<string[]> {
+    try {
+        return await readCategories();
+    } catch (error) {
+        console.error("[ACTION_GET_CATEGORIES]", error);
+        return [];
+    }
+}
+
+export async function addCategoryPath(newPath: string): Promise<void> {
+    try {
+        const paths = await readCategories();
+        if (!paths.includes(newPath)) {
+            paths.push(newPath);
+            await writeCategories(paths);
+            revalidatePath('/');
+        }
+    } catch (error) {
+        console.error('[ACTION_ADD_CATEGORY]', error);
+        if (error instanceof Error) throw error;
+        throw new Error('An unexpected error occurred while adding the category.');
+    }
+}
+
+export async function deleteEmptyCategory(pathToDelete: string): Promise<void> {
+    try {
+        const allCatPaths = await readCategories();
+        const remainingCatPaths = allCatPaths.filter(p => p !== pathToDelete && !p.startsWith(`${pathToDelete}/`));
+        if(allCatPaths.length !== remainingCatPaths.length) {
+            await writeCategories(remainingCatPaths);
+            revalidatePath('/');
+        }
+    } catch (error) {
+        console.error('[ACTION_DELETE_EMPTY_CATEGORY]', error);
+        if (error instanceof Error) throw error;
+        throw new Error('An unexpected error occurred while deleting the category.');
+    }
 }
 
 export async function getArchiveItems(): Promise<ArchiveItem[]> {
@@ -219,6 +280,7 @@ export async function handleCategoryAction(
   migrationPath?: string
 ): Promise<{ moved: number; deleted: number }> {
     const data = await readData();
+    const allCatPaths = await readCategories();
     let movedCount = 0;
     let deletedCount = 0;
     
@@ -227,6 +289,7 @@ export async function handleCategoryAction(
     );
 
     if (migrationPath !== undefined) { // This includes empty string "" for root
+        // Move items
         const updatedData = data.map(item => {
             if (item.category === categoryToDelete || item.category.startsWith(`${categoryToDelete}/`)) {
                 const remainingPath = item.category.substring(categoryToDelete.length).replace(/^\//, '');
@@ -237,18 +300,32 @@ export async function handleCategoryAction(
             return item;
         });
         await writeData(updatedData);
-    } else { // Delete items
+
+        // Move category paths in categories.json
+        const updatedCatPaths = allCatPaths.map(p => {
+            if (p === categoryToDelete || p.startsWith(`${categoryToDelete}/`)) {
+                const remainingPath = p.substring(categoryToDelete.length).replace(/^\//, '');
+                return [migrationPath, remainingPath].filter(Boolean).join('/');
+            }
+            return p;
+        });
+        await writeCategories(updatedCatPaths);
+
+    } else { // Delete items and category paths
         const idsToDelete = new Set(itemsToProcess.map(item => item.id));
-        if (idsToDelete.size === 0) return { moved: 0, deleted: 0 };
         
         const filesToDelete = itemsToProcess
             .map(item => item.url)
             .filter((url): url is string => !!url && url.startsWith('/uploads/'));
         
         const remainingData = data.filter(item => !idsToDelete.has(item.id));
-        deletedCount = idsToDelete.size;
+        deletedCount = data.length - remainingData.length;
         
         await writeData(remainingData);
+
+        // Delete category paths from categories.json
+        const remainingCatPaths = allCatPaths.filter(p => p !== categoryToDelete && !p.startsWith(`${categoryToDelete}/`));
+        await writeCategories(remainingCatPaths);
 
         for (const url of filesToDelete) {
             try {
