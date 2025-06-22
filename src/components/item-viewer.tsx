@@ -19,7 +19,10 @@ export default function ItemViewer({ item }: ItemViewerProps) {
   useEffect(() => {
     // This runs only on the client, so window is available.
     if (item.url) {
-      setAbsoluteUrl(window.location.origin + item.url);
+      // Use the URL constructor for a robust way of creating the full URL.
+      // This correctly handles base paths and ensures a valid URL is formed.
+      const fullUrl = new URL(item.url, window.location.origin).href;
+      setAbsoluteUrl(fullUrl);
     }
   }, [item.url]);
 
@@ -68,6 +71,9 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         if (!absoluteUrl) {
           return <p className="text-center py-8">Loading document viewer...</p>;
         }
+        // Google Docs Viewer requires a publicly accessible URL.
+        // It will not work with localhost or local network IPs during development.
+        // This feature will work correctly once the app is deployed to a live server.
         return (
           <div className="w-full h-full rounded-lg overflow-hidden border">
             <iframe
