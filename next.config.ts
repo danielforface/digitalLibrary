@@ -20,12 +20,7 @@ const nextConfig: NextConfig = {
     ],
   },
   serverActions: {
-    bodySizeLimit: 50 * 1024 * 1024, // 50MB
-  },
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
+    bodySizeLimit: '50mb',
   },
 };
 

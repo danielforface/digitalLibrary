@@ -114,18 +114,10 @@ export default function DigitalArchiveApp() {
       handleCloseDialog();
     } catch (error) {
       console.error("Error submitting form:", error);
-      let description = 'Could not save the item.';
-      if (error instanceof Error) {
-        if (error.message.includes('fetch') || error.message.includes('unexpected response')) {
-          description = `The file may be too large or there was a network issue. The server limit is 50MB. Please try again.`;
-        } else {
-          description = error.message;
-        }
-      }
       toast({
         variant: 'destructive',
         title: 'Submission Error',
-        description: description,
+        description: (error instanceof Error) ? error.message : 'An unknown error occurred.',
       });
     }
   };
