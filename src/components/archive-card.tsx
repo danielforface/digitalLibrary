@@ -46,7 +46,7 @@ export default function ArchiveCard({ item, onView, onEdit, onDelete }: ArchiveC
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg font-headline leading-tight">{item.title}</CardTitle>
-            <CardDescription>{item.topic}</CardDescription>
+            <CardDescription>{item.description}</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="flex-grow">

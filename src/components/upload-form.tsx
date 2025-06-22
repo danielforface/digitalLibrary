@@ -22,7 +22,7 @@ import type { ArchiveItem, FileType } from "@/lib/types"
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   category: z.string().min(1, "Category is required."),
-  topic: z.string().min(1, "Topic is required."),
+  description: z.string().min(1, "Description is required."),
   type: z.enum(["text", "image", "audio", "video", "pdf", "word"]),
   content: z.string().optional(),
   url: z.string().url().optional().or(z.literal('')),
@@ -41,7 +41,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
     defaultValues: {
       title: itemToEdit?.title || "",
       category: itemToEdit?.category || "",
-      topic: itemToEdit?.topic || "",
+      description: itemToEdit?.description || "",
       type: itemToEdit?.type || "text",
       content: itemToEdit?.content || "",
       url: itemToEdit?.url || "",
@@ -108,10 +108,10 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
           />
           <FormField
             control={form.control}
-            name="topic"
+            name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Topic</FormLabel>
+                <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Input placeholder="e.g., Art History" {...field} />
                 </FormControl>

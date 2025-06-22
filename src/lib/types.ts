@@ -5,7 +5,7 @@ export type ArchiveItem = {
   title: string;
   type: FileType;
   category: string;
-  topic: string;
+  description: string;
   createdAt: string;
   updatedAt: string;
   content?: string;
