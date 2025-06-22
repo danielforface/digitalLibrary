@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -72,6 +73,14 @@ export default function DigitalArchiveApp() {
 
   const handleOpenDialog = (mode: 'new' | 'edit' | 'view', item?: ArchiveItem) => {
     setDialogState({ open: true, mode, item });
+  };
+
+  const handleViewItem = (item: ArchiveItem) => {
+    if (item.type === 'pdf' && item.url) {
+      window.open(item.url, '_blank')?.focus();
+    } else {
+      handleOpenDialog('view', item);
+    }
   };
 
   const handleCloseDialog = () => {
@@ -190,7 +199,7 @@ export default function DigitalArchiveApp() {
         <ArchiveView
           items={filteredItems}
           onUpload={() => handleOpenDialog('new')}
-          onView={(item) => handleOpenDialog('view', item)}
+          onView={handleViewItem}
           onEdit={(item) => handleOpenDialog('edit', item)}
           onDelete={handleDelete}
           categoryTitle={selectedCategory}
