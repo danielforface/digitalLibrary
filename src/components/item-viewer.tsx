@@ -36,7 +36,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
     switch (item.type) {
       case 'text':
         return (
-          <div className="prose dark:prose-invert max-w-none">
+          <div className="prose dark:prose-invert max-w-none h-full overflow-y-auto">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {item.content || ''}
             </ReactMarkdown>
@@ -44,7 +44,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         );
       case 'image':
         return (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+          <div className="relative w-full h-full">
             <Image
               src={item.url!}
               alt={item.title}
@@ -60,7 +60,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         return <video controls src={item.url} className="w-full rounded-lg" />;
       case 'pdf':
         return (
-          <div className="w-full h-[70vh] rounded-lg overflow-hidden border">
+          <div className="w-full h-full rounded-lg overflow-hidden border">
             <iframe src={item.url!} className="w-full h-full border-0" title={item.title} />
           </div>
         );
@@ -69,7 +69,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
           return <p className="text-center py-8">Loading document viewer...</p>;
         }
         return (
-          <div className="w-full h-[70vh] rounded-lg overflow-hidden border">
+          <div className="w-full h-full rounded-lg overflow-hidden border">
             <iframe
               src={`https://docs.google.com/gview?url=${encodeURIComponent(absoluteUrl)}&embedded=true`}
               className="w-full h-full border-0"
@@ -85,10 +85,12 @@ export default function ItemViewer({ item }: ItemViewerProps) {
   const showDownloadButton = ['pdf', 'word', 'image', 'audio', 'video'].includes(item.type);
 
   return (
-    <div className="py-4 space-y-4">
-      {renderContent()}
+    <div className="py-4 space-y-4 h-full flex flex-col">
+      <div className="flex-grow min-h-0">
+        {renderContent()}
+      </div>
       {showDownloadButton && item.url && (
-        <div className="text-right pt-2">
+        <div className="text-right pt-2 flex-shrink-0">
           <Button asChild>
             <a href={item.url} download={item.title}>
               <Download className="mr-2 h-4 w-4" />
