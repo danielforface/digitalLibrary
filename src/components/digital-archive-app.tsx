@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import type { UploadFormData } from './upload-form';
 import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem } from '@/app/actions';
+import MiniAudioPlayer from './mini-audio-player';
 
 type DialogState = {
   open: boolean;
@@ -25,6 +26,7 @@ export default function DigitalArchiveApp() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [dialogState, setDialogState] = useState<DialogState>({ open: false, mode: 'new' });
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,7 +76,9 @@ export default function DigitalArchiveApp() {
   };
 
   const handleViewItem = (item: ArchiveItem) => {
-    if ((item.type === 'pdf' || item.type === 'image') && item.url) {
+    if (item.type === 'audio' && item.url) {
+      setNowPlaying(item);
+    } else if ((item.type === 'pdf' || item.type === 'image') && item.url) {
       window.open(item.url, '_blank')?.focus();
     } else {
       handleOpenDialog('view', item);
@@ -174,6 +178,7 @@ export default function DigitalArchiveApp() {
       </Sheet>
 
       <div className="flex-1 flex flex-col overflow-hidden">
+        {nowPlaying && <MiniAudioPlayer item={nowPlaying} onClose={() => setNowPlaying(null)} />}
         <ArchiveView
           items={filteredItems}
           onUpload={() => handleOpenDialog('new')}
