@@ -89,6 +89,9 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
     return newItem;
   } catch (error) {
     console.error('[ACTION_CREATE_ITEM]', error);
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error('An unexpected error occurred while creating the item.');
   }
 }
@@ -155,6 +158,9 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
 
     } catch (error) {
         console.error('[ACTION_UPDATE_ITEM]', error);
+        if (error instanceof Error) {
+            throw error;
+        }
         throw new Error('An unexpected error occurred while updating the item.');
     }
 }
@@ -186,6 +192,9 @@ export async function deleteArchiveItem(id: string): Promise<void> {
         revalidatePath('/');
     } catch (error) {
         console.error('[ACTION_DELETE_ITEM]', error);
+        if (error instanceof Error) {
+            throw error;
+        }
         throw new Error('An unexpected error occurred while deleting the item.');
     }
 }
