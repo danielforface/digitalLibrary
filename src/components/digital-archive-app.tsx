@@ -12,6 +12,7 @@ import type { UploadFormData } from './upload-form';
 import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
+import MoveItemDialog from './move-item-dialog';
 
 function buildCategoryTree(items: ArchiveItem[], extraCategoryPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
@@ -74,6 +75,7 @@ export default function DigitalArchiveApp() {
   const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
+  const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -105,22 +107,31 @@ export default function DigitalArchiveApp() {
       node.children.forEach(traverse);
     };
     traverse(categoryTree);
-    return Array.from(paths);
+    return Array.from(paths).sort();
   }, [categoryTree]);
 
   const categories = useMemo(() => ['All', ...allCategoryPaths], [allCategoryPaths]);
 
   const filteredItems = useMemo(() => {
-    if (selectedCategory === 'All') return items;
-    return items.filter(item => 
-      item.category === selectedCategory || item.category.startsWith(`${selectedCategory}/`)
-    );
-  }, [items, selectedCategory]);
+    let categoryFiltered = items;
+    if (selectedCategory !== 'All') {
+        categoryFiltered = items.filter(item => 
+            item.category === selectedCategory || item.category.startsWith(`${selectedCategory}/`)
+        );
+    }
+    if (!selectedTag) {
+        return categoryFiltered;
+    }
+    return categoryFiltered.filter(item => item.tags?.includes(selectedTag));
+  }, [items, selectedCategory, selectedTag]);
   
   const availableTags = useMemo(() => {
-    const allTags = filteredItems.flatMap(item => item.tags || []);
-    return [...new Set(allTags)];
-  }, [filteredItems]);
+    const categoryFiltered = (selectedCategory === 'All') 
+        ? items 
+        : items.filter(item => item.category === selectedCategory || item.category.startsWith(`${selectedCategory}/`));
+    const allTags = categoryFiltered.flatMap(item => item.tags || []);
+    return [...new Set(allTags)].sort();
+  }, [items, selectedCategory]);
 
 
   const handleOpenDialog = (mode: 'new' | 'edit' | 'view', item?: ArchiveItem) => {
@@ -130,7 +141,7 @@ export default function DigitalArchiveApp() {
   const handleViewItem = (item: ArchiveItem) => {
     if (item.type === 'audio' && item.url) {
       setNowPlaying(item);
-    } else if ((item.type === 'pdf' || item.type === 'image') && item.url) {
+    } else if ((item.type === 'pdf' || item.type === 'image' || item.type === 'video') && item.url) {
       window.open(item.url, '_blank')?.focus();
     } else {
       handleOpenDialog('view', item);
@@ -245,10 +256,63 @@ export default function DigitalArchiveApp() {
       setCategoryToDelete(null);
       // After action, we may need to remove from extraCategories if it's now empty.
       if (path) {
-          setExtraCategories(prev => prev.filter(p => p !== path));
+          const isCategoryEmpty = !items.some(item => item.category.startsWith(path));
+          if(isCategoryEmpty) {
+            setExtraCategories(prev => prev.filter(p => p !== path && !p.startsWith(`${path}/`)));
+          }
       }
       setSelectedCategory('All'); // Reselect All to be safe
   };
+
+  const handleMoveRequest = (item: ArchiveItem) => {
+    setItemToMove(item);
+  };
+
+  const handleCloseMoveDialog = () => {
+      setItemToMove(null);
+  };
+  
+  const handleConfirmMove = async (itemId: string, newCategory: string) => {
+      const itemToMove = items.find(i => i.id === itemId);
+      if (!itemToMove) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Item not found.' });
+          return;
+      }
+
+      setIsSubmitting(true);
+      try {
+          const formData = new FormData();
+          formData.append('title', itemToMove.title);
+          formData.append('category', newCategory);
+          formData.append('description', itemToMove.description);
+          formData.append('type', itemToMove.type);
+          formData.append('tags', itemToMove.tags?.join(', ') || '');
+          if (itemToMove.content) {
+              formData.append('content', itemToMove.content);
+          }
+          
+          const updatedItem = await updateArchiveItem(itemId, formData);
+          
+          setItems(prevItems =>
+            prevItems.map(item =>
+              item.id === updatedItem.id ? updatedItem : item
+            )
+          );
+          
+          toast({ title: "Success", description: `Item moved to "${newCategory || 'Root'}".` });
+          handleCloseMoveDialog();
+      } catch (error) {
+          console.error("Error moving item:", error);
+          toast({
+              variant: 'destructive',
+              title: 'Error',
+              description: (error instanceof Error) ? error.message : 'Could not move the item.',
+          });
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
+
 
   return (
     <div className="flex h-screen bg-background">
@@ -284,6 +348,7 @@ export default function DigitalArchiveApp() {
           onUpload={() => handleOpenDialog('new')}
           onView={handleViewItem}
           onEdit={(item) => handleOpenDialog('edit', item)}
+          onMove={handleMoveRequest}
           onDelete={handleDelete}
           categoryTitle={selectedCategory}
           onMenuClick={() => setMobileMenuOpen(true)}
@@ -304,6 +369,14 @@ export default function DigitalArchiveApp() {
         onClose={handleCloseDeleteDialog}
         categoryNode={categoryToDelete}
         allCategoryPaths={allCategoryPaths}
+      />
+      <MoveItemDialog
+          isOpen={!!itemToMove}
+          onClose={handleCloseMoveDialog}
+          item={itemToMove}
+          allCategoryPaths={allCategoryPaths}
+          onConfirmMove={handleConfirmMove}
+          isSubmitting={isSubmitting}
       />
     </div>
   );

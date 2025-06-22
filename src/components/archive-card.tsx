@@ -25,7 +25,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from './ui/button';
-import { MoreVertical, Edit, Trash2, Download } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Download, Move } from 'lucide-react';
 import type { ArchiveItem } from '@/lib/types';
 import FileIcon from './file-icon';
 import { formatDistanceToNow } from 'date-fns';
@@ -35,10 +35,11 @@ type ArchiveCardProps = {
   item: ArchiveItem;
   onView: () => void;
   onEdit: () => void;
+  onMove: () => void;
   onDelete: () => void;
 };
 
-export default function ArchiveCard({ item, onView, onEdit, onDelete }: ArchiveCardProps) {
+export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete }: ArchiveCardProps) {
   return (
     <Card className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
       <button onClick={onView} className="text-left w-full h-full flex flex-col">
@@ -82,6 +83,10 @@ export default function ArchiveCard({ item, onView, onEdit, onDelete }: ArchiveC
               <DropdownMenuItem onClick={onEdit}>
                 <Edit className="mr-2 h-4 w-4" />
                 <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onMove}>
+                <Move className="mr-2 h-4 w-4" />
+                <span>Move</span>
               </DropdownMenuItem>
               {item.url && (
                 <DropdownMenuItem asChild className="cursor-pointer">

@@ -12,6 +12,7 @@ type ArchiveViewProps = {
   onUpload: () => void;
   onView: (item: ArchiveItem) => void;
   onEdit: (item: ArchiveItem) => void;
+  onMove: (item: ArchiveItem) => void;
   onDelete: (itemId: string) => void;
   categoryTitle: string;
   onMenuClick: () => void;
@@ -20,7 +21,7 @@ type ArchiveViewProps = {
   onSelectTag: (tag: string | null) => void;
 };
 
-export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag }: ArchiveViewProps) {
+export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, onDelete, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag }: ArchiveViewProps) {
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
   const TAG_LIMIT = 5;
@@ -90,6 +91,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete,
               item={item}
               onView={() => onView(item)}
               onEdit={() => onEdit(item)}
+              onMove={() => onMove(item)}
               onDelete={() => onDelete(item.id)}
             />
           ))}
