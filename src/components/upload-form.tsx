@@ -54,6 +54,23 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
 
   const selectedType = form.watch("type");
 
+  const getAcceptAttribute = () => {
+    switch (selectedType) {
+      case 'image':
+        return 'image/*';
+      case 'audio':
+        return 'audio/*';
+      case 'video':
+        return 'video/*';
+      case 'pdf':
+        return 'application/pdf';
+      case 'word':
+        return '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return '';
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 mt-4">
@@ -157,7 +174,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
           />
         )}
 
-        {['image', 'audio', 'video'].includes(selectedType) && (
+        {selectedType !== 'text' && (
           <FormField
             control={form.control}
             name="file"
@@ -167,7 +184,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                 <FormControl>
                   <Input 
                     type="file"
-                    accept="image/*,audio/*,video/*"
+                    accept={getAcceptAttribute()}
                     onChange={(e) => field.onChange(e.target.files)}
                   />
                 </FormControl>
@@ -178,12 +195,6 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
               </FormItem>
             )}
           />
-        )}
-
-        {['pdf', 'word'].includes(selectedType) && (
-            <div className="p-4 bg-secondary rounded-md text-center">
-                <p className="text-sm text-secondary-foreground">File upload for PDFs and Word documents is not supported in this demo. Saving will create a placeholder item.</p>
-            </div>
         )}
 
         <div className="flex justify-end gap-2">
