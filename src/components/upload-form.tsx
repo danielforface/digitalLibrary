@@ -59,7 +59,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
       case 'image':
         return 'image/*';
       case 'audio':
-        return 'audio/*';
+        return 'audio/mp3,audio/m4a,audio/mpeg';
       case 'video':
         return 'video/*';
       case 'pdf':
