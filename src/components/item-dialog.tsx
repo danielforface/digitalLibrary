@@ -21,9 +21,10 @@ type ItemDialogProps = {
   onClose: () => void;
   onSubmit: (data: UploadFormData) => void;
   allCategories: string[];
+  isSubmitting: boolean;
 };
 
-export default function ItemDialog({ dialogState, onClose, onSubmit, allCategories }: ItemDialogProps) {
+export default function ItemDialog({ dialogState, onClose, onSubmit, allCategories, isSubmitting }: ItemDialogProps) {
   const { open, mode, item } = dialogState;
 
   const isDocument = mode === 'view' && (item?.type === 'word');
@@ -48,6 +49,7 @@ export default function ItemDialog({ dialogState, onClose, onSubmit, allCategori
             itemToEdit={mode === 'edit' ? item : undefined}
             allCategories={allCategories}
             onDone={onClose}
+            isSubmitting={isSubmitting}
           />
         )}
       </DialogContent>

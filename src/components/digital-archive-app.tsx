@@ -20,6 +20,7 @@ type DialogState = {
 export default function DigitalArchiveApp() {
   const [items, setItems] = useState<ArchiveItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [dialogState, setDialogState] = useState<DialogState>({ open: false, mode: 'new' });
@@ -85,6 +86,7 @@ export default function DigitalArchiveApp() {
   };
 
   const handleSubmit = async (formData: UploadFormData) => {
+    setIsSubmitting(true);
     const apiFormData = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (key === 'file') {
@@ -119,6 +121,8 @@ export default function DigitalArchiveApp() {
         title: 'Submission Error',
         description: (error instanceof Error) ? error.message : 'An unknown error occurred.',
       });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -187,6 +191,7 @@ export default function DigitalArchiveApp() {
         onClose={handleCloseDialog}
         onSubmit={handleSubmit}
         allCategories={categories.filter(c => c !== 'All')}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

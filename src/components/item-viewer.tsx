@@ -6,6 +6,8 @@ import type { ArchiveItem } from '@/lib/types';
 import FileIcon from './file-icon';
 import { Button } from './ui/button';
 import { Download } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 type ItemViewerProps = {
   item: ArchiveItem;
@@ -22,7 +24,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
   }, [item.url]);
 
   const renderContent = () => {
-    if (!item.url) {
+    if (!item.url && item.type !== 'text') {
       return (
         <div className="text-center p-8 bg-secondary rounded-lg">
           <FileIcon type={item.type} className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
@@ -33,12 +35,18 @@ export default function ItemViewer({ item }: ItemViewerProps) {
 
     switch (item.type) {
       case 'text':
-        return <p className="text-base whitespace-pre-wrap leading-relaxed">{item.content}</p>;
+        return (
+          <div className="prose dark:prose-invert max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {item.content || ''}
+            </ReactMarkdown>
+          </div>
+        );
       case 'image':
         return (
           <div className="relative w-full aspect-video rounded-lg overflow-hidden">
             <Image
-              src={item.url}
+              src={item.url!}
               alt={item.title}
               fill
               className="object-contain"
@@ -53,7 +61,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
       case 'pdf':
         return (
           <div className="w-full h-[70vh] rounded-lg overflow-hidden border">
-            <iframe src={item.url} className="w-full h-full border-0" title={item.title} />
+            <iframe src={item.url!} className="w-full h-full border-0" title={item.title} />
           </div>
         );
       case 'word':

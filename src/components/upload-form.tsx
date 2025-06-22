@@ -4,6 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -47,9 +48,10 @@ type UploadFormProps = {
   itemToEdit?: ArchiveItem;
   allCategories: string[];
   onDone: () => void;
+  isSubmitting: boolean;
 };
 
-export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone }: UploadFormProps) {
+export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone, isSubmitting }: UploadFormProps) {
   const form = useForm<UploadFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -179,6 +181,9 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                 <FormControl>
                   <Textarea placeholder="Type your text here..." {...field} className="min-h-[150px]" />
                 </FormControl>
+                <FormDescription>
+                  You can use Markdown for rich text formatting.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -209,8 +214,9 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
         )}
 
         <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={onDone}>Cancel</Button>
-            <Button type="submit">
+            <Button type="button" variant="ghost" onClick={onDone} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {itemToEdit ? 'Save Changes' : 'Add to Archive'}
             </Button>
         </div>
