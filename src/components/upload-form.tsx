@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,13 +20,23 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ArchiveItem } from "@/lib/types"
 
+const MAX_FILE_SIZE_MB = 50;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
   category: z.string().min(1, "Category is required."),
   description: z.string().min(1, "Description is required."),
   type: z.enum(["text", "image", "audio", "video", "pdf", "word"]),
   content: z.string().optional(),
-  file: z.any().optional(),
+  file: z.any()
+    .optional()
+    .refine((value) => {
+        if (value instanceof FileList && value.length > 0) {
+            return value[0].size <= MAX_FILE_SIZE_BYTES;
+        }
+        return true;
+    }, `File size must be less than ${MAX_FILE_SIZE_MB}MB.`),
   tags: z.string().optional(),
 });
 
