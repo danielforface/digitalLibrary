@@ -1,0 +1,174 @@
+"use client"
+
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { ArchiveItem, FileType } from "@/lib/types"
+
+const formSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters."),
+  category: z.string().min(1, "Category is required."),
+  topic: z.string().min(1, "Topic is required."),
+  type: z.enum(["text", "image", "audio", "video", "pdf", "word"]),
+  content: z.string().optional(),
+  url: z.string().url().optional().or(z.literal('')),
+});
+
+type UploadFormProps = {
+  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  itemToEdit?: ArchiveItem;
+  allCategories: string[];
+  onDone: () => void;
+};
+
+export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone }: UploadFormProps) {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: itemToEdit?.title || "",
+      category: itemToEdit?.category || "",
+      topic: itemToEdit?.topic || "",
+      type: itemToEdit?.type || "text",
+      content: itemToEdit?.content || "",
+      url: itemToEdit?.url || "",
+    },
+  });
+
+  const selectedType = form.watch("type");
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Reflections on Modern Art" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>File Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a file type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="audio">Audio</SelectItem>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="pdf">PDF</SelectItem>
+                    <SelectItem value="word">Word Document</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <Input placeholder="e.g., Writings, Media" {...field} list="category-suggestions" />
+                <datalist id="category-suggestions">
+                    {allCategories.map(cat => <option key={cat} value={cat} />)}
+                </datalist>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="topic"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Topic</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., Art History" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        {selectedType === 'text' && (
+          <FormField
+            control={form.control}
+            name="content"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Content</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Type your text here..." {...field} className="min-h-[150px]" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {['image', 'audio', 'video'].includes(selectedType) && (
+          <FormField
+            control={form.control}
+            name="url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>File URL</FormLabel>
+                <FormControl>
+                  <Input type="url" placeholder="https://..." {...field} />
+                </FormControl>
+                 <FormDescription>
+                    For demonstration, please provide a URL to the media file.
+                  </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {['pdf', 'word'].includes(selectedType) && (
+            <div className="p-4 bg-secondary rounded-md text-center">
+                <p className="text-sm text-secondary-foreground">File upload for PDFs and Word documents is not supported in this demo. Saving will create a placeholder item.</p>
+            </div>
+        )}
+
+        <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={onDone}>Cancel</Button>
+            <Button type="submit">
+              {itemToEdit ? 'Save Changes' : 'Add to Archive'}
+            </Button>
+        </div>
+      </form>
+    </Form>
+  )
+}
