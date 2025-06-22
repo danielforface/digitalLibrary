@@ -7,8 +7,9 @@ import AppSidebar from '@/components/app-sidebar';
 import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import type { UploadFormData } from './upload-form';
+import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem } from '@/app/actions';
 
 type DialogState = {
   open: boolean;
@@ -29,11 +30,7 @@ export default function DigitalArchiveApp() {
     const fetchItems = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/archive');
-        if (!response.ok) {
-          throw new Error('Failed to fetch archive items');
-        }
-        const data: ArchiveItem[] = await response.json();
+        const data = await getArchiveItems();
         setItems(data);
       } catch (error) {
         console.error(error);
@@ -89,7 +86,6 @@ export default function DigitalArchiveApp() {
 
   const handleSubmit = async (formData: UploadFormData) => {
     const apiFormData = new FormData();
-    // Use Object.entries to iterate over form data and append to FormData
     Object.entries(formData).forEach(([key, value]) => {
       if (key === 'file') {
         if (value instanceof FileList && value.length > 0) {
@@ -101,42 +97,35 @@ export default function DigitalArchiveApp() {
     });
 
     try {
-      let response;
-      let url = '/api/archive';
-      let method = 'POST';
-
+      let result;
       if (dialogState.mode === 'edit' && dialogState.item) {
-        url = `/api/archive/${dialogState.item.id}`;
-        method = 'PUT';
+        result = await updateArchiveItem(dialogState.item.id, apiFormData);
+      } else {
+        result = await createArchiveItem(apiFormData);
       }
 
-      response = await fetch(url, { method, body: apiFormData });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Server responded with ${response.status}`);
+      if (!result.success || !result.item) {
+        throw new Error(result.message || 'An unknown error occurred');
       }
-
-      const resultItem: ArchiveItem = await response.json();
-
+      
       if (dialogState.mode === 'new') {
-        setItems(prevItems => [resultItem, ...prevItems]);
+        setItems(prevItems => [result.item!, ...prevItems]);
         toast({ title: "Success", description: "Item added to your archive." });
-      } else { // edit mode
+      } else {
         setItems(prevItems =>
           prevItems.map(item =>
-            item.id === resultItem.id ? resultItem : item
+            item.id === result.item!.id ? result.item! : item
           )
         );
         toast({ title: "Success", description: "Item updated." });
       }
-      handleCloseDialog();
 
+      handleCloseDialog();
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
         variant: 'destructive',
-        title: 'Upload Error',
+        title: 'Submission Error',
         description: (error as Error).message || 'Could not save the item.',
       });
     }
@@ -145,12 +134,9 @@ export default function DigitalArchiveApp() {
 
   const handleDelete = async (itemId: string) => {
     try {
-      const response = await fetch(`/api/archive/${itemId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete the item.');
+      const result = await deleteArchiveItem(itemId);
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to delete the item.');
       }
       
       setItems(prevItems => prevItems.filter(item => item.id !== itemId));
@@ -161,7 +147,7 @@ export default function DigitalArchiveApp() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not delete the item.',
+        description: (error as Error).message || 'Could not delete the item.',
       });
     }
   };
