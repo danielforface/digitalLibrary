@@ -15,19 +15,40 @@ type DialogState = {
   item?: ArchiveItem;
 };
 
+type UploadFormData = Omit<ArchiveItem, 'id' | 'createdAt' | 'updatedAt' | 'tags'> & {
+  tags?: string;
+};
+
+
 export default function DigitalArchiveApp() {
   const [items, setItems] = useState<ArchiveItem[]>(initialData);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [dialogState, setDialogState] = useState<DialogState>({ open: false, mode: 'new' });
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
 
   const categories = useMemo(() => ['All', ...new Set(items.map(item => item.category))], [items]);
   
-  const filteredItems = useMemo(() => {
-    if (selectedCategory === 'All') return items;
-    return items.filter(item => item.category === selectedCategory);
+  const availableTags = useMemo(() => {
+    const itemsInCategory = selectedCategory === 'All'
+      ? items
+      : items.filter(item => item.category === selectedCategory);
+    
+    const allTags = itemsInCategory.flatMap(item => item.tags || []);
+    return [...new Set(allTags)];
   }, [items, selectedCategory]);
+
+  const filteredItems = useMemo(() => {
+    let result = items;
+    if (selectedCategory !== 'All') {
+      result = result.filter(item => item.category === selectedCategory);
+    }
+    if (selectedTag) {
+      result = result.filter(item => item.tags?.includes(selectedTag));
+    }
+    return result;
+  }, [items, selectedCategory, selectedTag]);
 
   const handleOpenDialog = (mode: 'new' | 'edit' | 'view', item?: ArchiveItem) => {
     setDialogState({ open: true, mode, item });
@@ -37,10 +58,14 @@ export default function DigitalArchiveApp() {
     setDialogState(prevState => ({ ...prevState, open: false }));
   };
 
-  const handleSubmit = (itemData: Omit<ArchiveItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleSubmit = (formData: UploadFormData) => {
+    const { tags: tagsString, ...itemData } = formData;
+    const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+
     if (dialogState.mode === 'new') {
       const newItem: ArchiveItem = {
         ...itemData,
+        tags,
         id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -51,7 +76,7 @@ export default function DigitalArchiveApp() {
       setItems(prevItems =>
         prevItems.map(item =>
           item.id === dialogState.item!.id
-            ? { ...item, ...itemData, updatedAt: new Date().toISOString() }
+            ? { ...item, ...itemData, tags, updatedAt: new Date().toISOString() }
             : item
         )
       );
@@ -67,6 +92,7 @@ export default function DigitalArchiveApp() {
 
   const handleSelectCategory = (category: string) => {
     setSelectedCategory(category);
+    setSelectedTag(null);
     setMobileMenuOpen(false);
   };
 
@@ -76,17 +102,11 @@ export default function DigitalArchiveApp() {
         className="hidden md:flex"
         categories={categories}
         selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
+        onSelectCategory={handleSelectCategory}
       />
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="p-0">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Menu</SheetTitle>
-            <SheetDescription>
-              Main application navigation menu.
-            </SheetDescription>
-          </SheetHeader>
           <AppSidebar
             categories={categories}
             selectedCategory={selectedCategory}
@@ -104,6 +124,9 @@ export default function DigitalArchiveApp() {
           onDelete={handleDelete}
           categoryTitle={selectedCategory}
           onMenuClick={() => setMobileMenuOpen(true)}
+          availableTags={availableTags}
+          selectedTag={selectedTag}
+          onSelectTag={setSelectedTag}
         />
       </div>
       <ItemDialog

@@ -15,10 +15,14 @@ type DialogState = {
   item?: ArchiveItem;
 };
 
+type UploadFormData = Omit<ArchiveItem, 'id' | 'createdAt' | 'updatedAt' | 'tags'> & {
+  tags?: string;
+};
+
 type ItemDialogProps = {
   dialogState: DialogState;
   onClose: () => void;
-  onSubmit: (data: Omit<ArchiveItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onSubmit: (data: UploadFormData) => void;
   allCategories: string[];
 };
 

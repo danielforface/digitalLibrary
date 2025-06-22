@@ -28,6 +28,7 @@ import { MoreVertical, Edit, Trash2 } from 'lucide-react';
 import type { ArchiveItem } from '@/lib/types';
 import FileIcon from './file-icon';
 import { formatDistanceToNow } from 'date-fns';
+import { Badge } from './ui/badge';
 
 type ArchiveCardProps = {
   item: ArchiveItem;
@@ -54,6 +55,13 @@ export default function ArchiveCard({ item, onView, onEdit, onDelete }: ArchiveC
             <p className="text-sm text-muted-foreground line-clamp-3">
               {item.content}
             </p>
+          )}
+           {item.tags && item.tags.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {item.tags.map(tag => (
+                <Badge key={tag} variant="secondary">{tag}</Badge>
+              ))}
+            </div>
           )}
         </CardContent>
       </button>

@@ -9,7 +9,8 @@ export const initialData: ArchiveItem[] = [
     description: 'Art History',
     createdAt: new Date('2023-05-20T14:48:00.000Z').toISOString(),
     updatedAt: new Date('2023-05-20T14:48:00.000Z').toISOString(),
-    content: 'Modern art represents an evolving set of ideas among a number of painters, sculptors, photographers, performers, and writers who - both individually and collectively - sought new approaches to art making. This text explores the nuances of this transformative period.'
+    content: 'Modern art represents an evolving set of ideas among a number of painters, sculptors, photographers, performers, and writers who - both individually and collectively - sought new approaches to art making. This text explores the nuances of this transformative period.',
+    tags: ['art', 'modernism', 'essay']
   },
   {
     id: '2',
@@ -20,7 +21,8 @@ export const initialData: ArchiveItem[] = [
     createdAt: new Date('2023-08-15T09:21:00.000Z').toISOString(),
     updatedAt: new Date('2023-08-15T09:21:00.000Z').toISOString(),
     url: 'https://placehold.co/600x400.png',
-    content: 'architecture sketch'
+    content: 'architecture sketch',
+    tags: ['architecture', 'sketch', 'design']
   },
   {
     id: '3',
@@ -31,6 +33,7 @@ export const initialData: ArchiveItem[] = [
     createdAt: new Date('2023-10-02T18:30:00.000Z').toISOString(),
     updatedAt: new Date('2023-10-02T18:30:00.000Z').toISOString(),
     url: 'https://storage.googleapis.com/studioprompt/s-5HJd3yrkfr.mp3',
+    tags: ['classical', 'piano', 'instrumental']
   },
   {
     id: '4',
@@ -41,6 +44,7 @@ export const initialData: ArchiveItem[] = [
     createdAt: new Date('2024-01-11T11:05:00.000Z').toISOString(),
     updatedAt: new Date('2024-01-11T11:05:00.000Z').toISOString(),
     url: 'https://storage.googleapis.com/studioprompt/v-d3d5182987.mp4',
+    tags: ['film', 'cinematography', 'tutorial']
   },
   {
     id: '5',
@@ -51,6 +55,7 @@ export const initialData: ArchiveItem[] = [
     createdAt: new Date('2024-02-28T16:00:00.000Z').toISOString(),
     updatedAt: new Date('2024-02-28T16:00:00.000Z').toISOString(),
     url: '#',
+    tags: ['ai', 'ethics', 'research']
   },
   {
     id: '6',
@@ -61,6 +66,7 @@ export const initialData: ArchiveItem[] = [
     createdAt: new Date('2024-03-10T13:45:00.000Z').toISOString(),
     updatedAt: new Date('2024-03-10T13:45:00.000Z').toISOString(),
     url: '#',
+    tags: ['work', 'project', 'draft']
   },
   {
     id: '7',
@@ -71,7 +77,8 @@ export const initialData: ArchiveItem[] = [
     createdAt: new Date('2023-11-05T12:10:00.000Z').toISOString(),
     updatedAt: new Date('2023-11-05T12:10:00.000Z').toISOString(),
     url: 'https://placehold.co/600x401.png',
-    content: 'abstract landscape'
+    content: 'abstract landscape',
+    tags: ['photography', 'abstract', 'landscape']
   },
   {
     id: '8',
@@ -81,7 +88,8 @@ export const initialData: ArchiveItem[] = [
     description: 'Fiction',
     createdAt: new Date('2022-12-30T20:00:00.000Z').toISOString(),
     updatedAt: new Date('2022-12-30T20:00:00.000Z').toISOString(),
-    content: 'The old house stood on a hill overlooking the town. Its windows were like vacant eyes, staring out at a world that had long since moved on. But for a curious few, it held secrets of a time gone by, waiting to be rediscovered.'
+    content: 'The old house stood on a hill overlooking the town. Its windows were like vacant eyes, staring out at a world that had long since moved on. But for a curious few, it held secrets of a time gone by, waiting to be rediscovered.',
+    tags: ['fiction', 'story', 'writing']
   },
   {
     id: '9',
@@ -91,6 +99,7 @@ export const initialData: ArchiveItem[] = [
     description: 'Seasonal Message',
     createdAt: new Date('2024-07-04T10:00:00.000Z').toISOString(),
     updatedAt: new Date('2024-07-04T10:00:00.000Z').toISOString(),
-    content: 'Wishing everyone a happy and safe holiday season, full of joy and celebration.'
+    content: 'Wishing everyone a happy and safe holiday season, full of joy and celebration.',
+    tags: ['holiday', 'greeting', '4th of july']
   }
 ];

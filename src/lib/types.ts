@@ -10,4 +10,5 @@ export type ArchiveItem = {
   updatedAt: string;
   content?: string;
   url?: string;
+  tags?: string[];
 };

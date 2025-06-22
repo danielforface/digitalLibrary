@@ -26,17 +26,20 @@ const formSchema = z.object({
   type: z.enum(["text", "image", "audio", "video", "pdf", "word"]),
   content: z.string().optional(),
   url: z.string().url().optional().or(z.literal('')),
+  tags: z.string().optional(),
 });
 
+type UploadFormData = z.infer<typeof formSchema>;
+
 type UploadFormProps = {
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+  onSubmit: (data: UploadFormData) => void;
   itemToEdit?: ArchiveItem;
   allCategories: string[];
   onDone: () => void;
 };
 
 export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone }: UploadFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<UploadFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: itemToEdit?.title || "",
@@ -45,6 +48,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
       type: itemToEdit?.type || "text",
       content: itemToEdit?.content || "",
       url: itemToEdit?.url || "",
+      tags: itemToEdit?.tags?.join(', ') || "",
     },
   });
 
@@ -115,6 +119,22 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                 <FormControl>
                   <Input placeholder="e.g., Art History" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Tags</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g., inspiration, draft, final" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Enter tags separated by commas.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
