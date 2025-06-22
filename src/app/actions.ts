@@ -168,6 +168,7 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
         await writeData(data);
         
         revalidatePath('/');
+        revalidatePath('/[...slug]');
         return updatedItem;
 
     } catch (error) {
@@ -211,4 +212,53 @@ export async function deleteArchiveItem(id: string): Promise<void> {
         }
         throw new Error('An unexpected error occurred while deleting the item.');
     }
+}
+
+export async function handleCategoryAction(
+  categoryToDelete: string,
+  migrationPath?: string
+): Promise<{ moved: number; deleted: number }> {
+    const data = await readData();
+    let movedCount = 0;
+    let deletedCount = 0;
+    
+    const itemsToProcess = data.filter(item => 
+        item.category === categoryToDelete || item.category.startsWith(`${categoryToDelete}/`)
+    );
+
+    if (migrationPath !== undefined) { // This includes empty string "" for root
+        const updatedData = data.map(item => {
+            if (item.category === categoryToDelete || item.category.startsWith(`${categoryToDelete}/`)) {
+                const remainingPath = item.category.substring(categoryToDelete.length).replace(/^\//, '');
+                const newPath = [migrationPath, remainingPath].filter(Boolean).join('/');
+                movedCount++;
+                return { ...item, category: newPath, updatedAt: new Date().toISOString() };
+            }
+            return item;
+        });
+        await writeData(updatedData);
+    } else { // Delete items
+        const idsToDelete = new Set(itemsToProcess.map(item => item.id));
+        if (idsToDelete.size === 0) return { moved: 0, deleted: 0 };
+        
+        const filesToDelete = itemsToProcess
+            .map(item => item.url)
+            .filter((url): url is string => !!url && url.startsWith('/uploads/'));
+        
+        const remainingData = data.filter(item => !idsToDelete.has(item.id));
+        deletedCount = idsToDelete.size;
+        
+        await writeData(remainingData);
+
+        for (const url of filesToDelete) {
+            try {
+                await fs.unlink(path.join(process.cwd(), 'public', url));
+            } catch (err) {
+                console.error(`Failed to delete file: ${url}`, err);
+            }
+        }
+    }
+    
+    revalidatePath('/');
+    return { moved: movedCount, deleted: deletedCount };
 }

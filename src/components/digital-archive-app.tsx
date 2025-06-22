@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import type { ArchiveItem } from '@/lib/types';
+import type { ArchiveItem, CategoryNode } from '@/lib/types';
 import AppSidebar from '@/components/app-sidebar';
 import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
@@ -11,6 +11,51 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/
 import type { UploadFormData } from './upload-form';
 import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
+import DeleteCategoryDialog from './delete-category-dialog';
+
+function buildCategoryTree(items: ArchiveItem[], extraCategoryPaths: string[]): CategoryNode {
+  const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
+  const allPaths = [...new Set([...items.map(i => i.category), ...extraCategoryPaths])].filter(Boolean);
+  
+  const nodes: Record<string, CategoryNode> = { '': root };
+
+  allPaths.sort().forEach(path => {
+    path.split('/').reduce((parentPath, part) => {
+      const currentPath = parentPath ? `${parentPath}/${part}` : part;
+      if (!nodes[currentPath]) {
+        nodes[currentPath] = { name: part, path: currentPath, children: [], itemCount: 0 };
+      }
+      return currentPath;
+    }, '');
+  });
+
+  Object.values(nodes).forEach(node => {
+    if (node.path) {
+      const parts = node.path.split('/');
+      parts.pop();
+      const parentPath = parts.join('/');
+      if (nodes[parentPath] && !nodes[parentPath].children.some(child => child.path === node.path)) {
+        nodes[parentPath].children.push(node);
+      }
+    }
+  });
+
+  items.forEach(item => {
+    if (item.category && nodes[item.category]) {
+      nodes[item.category].itemCount++;
+    }
+  });
+
+  function sumCounts(node: CategoryNode): number {
+    const childCounts = node.children.reduce((sum, child) => sum + sumCounts(child), 0);
+    node.itemCount += childCounts;
+    return node.itemCount;
+  }
+
+  sumCounts(root);
+  return root;
+}
+
 
 type DialogState = {
   open: boolean;
@@ -27,6 +72,8 @@ export default function DigitalArchiveApp() {
   const [dialogState, setDialogState] = useState<DialogState>({ open: false, mode: 'new' });
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
+  const [extraCategories, setExtraCategories] = useState<string[]>([]);
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,27 +96,32 @@ export default function DigitalArchiveApp() {
     fetchItems();
   }, [toast]);
 
-  const categories = useMemo(() => ['All', ...new Set(items.map(item => item.category))], [items]);
-  
-  const availableTags = useMemo(() => {
-    const itemsInCategory = selectedCategory === 'All'
-      ? items
-      : items.filter(item => item.category === selectedCategory);
-    
-    const allTags = itemsInCategory.flatMap(item => item.tags || []);
-    return [...new Set(allTags)];
-  }, [items, selectedCategory]);
+  const categoryTree = useMemo(() => buildCategoryTree(items, extraCategories), [items, extraCategories]);
+
+  const allCategoryPaths = useMemo(() => {
+    const paths = new Set<string>();
+    const traverse = (node: CategoryNode) => {
+      if (node.path) paths.add(node.path);
+      node.children.forEach(traverse);
+    };
+    traverse(categoryTree);
+    return Array.from(paths);
+  }, [categoryTree]);
+
+  const categories = useMemo(() => ['All', ...allCategoryPaths], [allCategoryPaths]);
 
   const filteredItems = useMemo(() => {
-    let result = items;
-    if (selectedCategory !== 'All') {
-      result = result.filter(item => item.category === selectedCategory);
-    }
-    if (selectedTag) {
-      result = result.filter(item => item.tags?.includes(selectedTag));
-    }
-    return result;
-  }, [items, selectedCategory, selectedTag]);
+    if (selectedCategory === 'All') return items;
+    return items.filter(item => 
+      item.category === selectedCategory || item.category.startsWith(`${selectedCategory}/`)
+    );
+  }, [items, selectedCategory]);
+  
+  const availableTags = useMemo(() => {
+    const allTags = filteredItems.flatMap(item => item.tags || []);
+    return [...new Set(allTags)];
+  }, [filteredItems]);
+
 
   const handleOpenDialog = (mode: 'new' | 'edit' | 'view', item?: ArchiveItem) => {
     setDialogState({ open: true, mode, item });
@@ -117,7 +169,10 @@ export default function DigitalArchiveApp() {
         setItems(prevItems => [newItem, ...prevItems]);
         toast({ title: "Success", description: "Item added to your archive." });
       }
-
+      // Remove from extra categories if it was one
+      if (formData.category) {
+        setExtraCategories(prev => prev.filter(p => p !== formData.category));
+      }
       handleCloseDialog();
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -154,13 +209,56 @@ export default function DigitalArchiveApp() {
     setMobileMenuOpen(false);
   };
 
+  const handleAddCategory = (parentPath: string) => {
+    const newCategoryName = window.prompt(`Enter name for new category inside "${parentPath || 'Root'}":`);
+    if (newCategoryName && !newCategoryName.includes('/')) {
+      const newPath = parentPath ? `${parentPath}/${newCategoryName}` : newCategoryName;
+      if (allCategoryPaths.includes(newPath)) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Category already exists.' });
+        return;
+      }
+      setExtraCategories(prev => [...prev, newPath]);
+      toast({ title: 'Category Added', description: `"${newPath}" is ready to be used.`});
+    } else if (newCategoryName) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Category name cannot contain slashes.' });
+    }
+  };
+
+  const handleDeleteCategoryRequest = (node: CategoryNode) => {
+    // For categories with items, open the dialog.
+    if (node.itemCount > 0) {
+      setCategoryToDelete(node);
+    } else {
+        // For empty categories, confirm and remove from state.
+        if(window.confirm(`Are you sure you want to delete the empty category "${node.path}"?`)) {
+            setExtraCategories(prev => prev.filter(p => p !== node.path && !p.startsWith(`${node.path}/`)));
+            toast({ title: 'Empty category removed.' });
+            if (selectedCategory === node.path) {
+                setSelectedCategory('All');
+            }
+        }
+    }
+  };
+  
+  const handleCloseDeleteDialog = () => {
+      const path = categoryToDelete?.path;
+      setCategoryToDelete(null);
+      // After action, we may need to remove from extraCategories if it's now empty.
+      if (path) {
+          setExtraCategories(prev => prev.filter(p => p !== path));
+      }
+      setSelectedCategory('All'); // Reselect All to be safe
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <AppSidebar
         className="hidden md:flex"
-        categories={categories}
+        categoryTree={categoryTree}
         selectedCategory={selectedCategory}
         onSelectCategory={handleSelectCategory}
+        onAddCategory={handleAddCategory}
+        onDeleteCategory={handleDeleteCategoryRequest}
       />
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -170,9 +268,11 @@ export default function DigitalArchiveApp() {
             Select a category to browse the archive.
           </SheetDescription>
           <AppSidebar
-            categories={categories}
+            categoryTree={categoryTree}
             selectedCategory={selectedCategory}
             onSelectCategory={handleSelectCategory}
+            onAddCategory={handleAddCategory}
+            onDeleteCategory={handleDeleteCategoryRequest}
           />
         </SheetContent>
       </Sheet>
@@ -198,6 +298,12 @@ export default function DigitalArchiveApp() {
         onSubmit={handleSubmit}
         allCategories={categories.filter(c => c !== 'All')}
         isSubmitting={isSubmitting}
+      />
+      <DeleteCategoryDialog
+        isOpen={!!categoryToDelete}
+        onClose={handleCloseDeleteDialog}
+        categoryNode={categoryToDelete}
+        allCategoryPaths={allCategoryPaths}
       />
     </div>
   );

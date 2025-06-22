@@ -12,3 +12,10 @@ export type ArchiveItem = {
   url?: string;
   tags?: string[];
 };
+
+export type CategoryNode = {
+  name: string;
+  path: string;
+  children: CategoryNode[];
+  itemCount: number;
+};

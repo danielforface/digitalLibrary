@@ -25,6 +25,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete,
 
   const TAG_LIMIT = 5;
   const visibleTags = tagsExpanded ? availableTags : availableTags.slice(0, TAG_LIMIT);
+  const displayTitle = categoryTitle === 'All' ? 'All Items' : categoryTitle.split('/').pop();
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
@@ -34,7 +35,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onDelete,
             <Menu className="h-6 w-6" />
             <span className="sr-only">Open Menu</span>
           </Button>
-          <h2 className="text-3xl font-headline font-semibold">{categoryTitle}</h2>
+          <h2 className="text-3xl font-headline font-semibold">{displayTitle}</h2>
         </div>
         <Button onClick={onUpload}>
           <Upload className="mr-2 h-4 w-4" />

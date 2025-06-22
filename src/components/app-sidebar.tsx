@@ -1,35 +1,64 @@
+import { Button } from './ui/button';
+import { Plus } from 'lucide-react';
+import type { CategoryNode } from '@/lib/types';
+import CategoryTreeItem from './category-tree-item';
+import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Folder } from 'lucide-react';
 
 type AppSidebarProps = {
-  categories: string[];
+  categoryTree: CategoryNode;
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
+  onAddCategory: (parentPath: string) => void;
+  onDeleteCategory: (node: CategoryNode) => void;
   className?: string;
 };
 
-export default function AppSidebar({ categories, selectedCategory, onSelectCategory, className }: AppSidebarProps) {
+export default function AppSidebar({
+  categoryTree,
+  selectedCategory,
+  onSelectCategory,
+  onAddCategory,
+  onDeleteCategory,
+  className,
+}: AppSidebarProps) {
   return (
-    <aside className={cn("w-64 flex-shrink-0 bg-secondary/50 border-r p-4 flex flex-col", className)}>
-      <h1 className="text-2xl font-headline font-bold text-primary mb-8">Digital Archive</h1>
-      <nav className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold text-muted-foreground px-2 mb-2">Categories</h2>
-        {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => onSelectCategory(category)}
-            className={cn(
-              'flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors',
-              selectedCategory === category
-                ? 'bg-primary/20 text-primary font-semibold'
-                : 'text-foreground/70 hover:bg-primary/10'
-            )}
-          >
-            <Folder className="h-4 w-4" />
-            {category}
-          </button>
-        ))}
-      </nav>
+    <aside className={cn("w-72 flex-shrink-0 bg-secondary/50 border-r p-2 flex flex-col", className)}>
+      <div className="p-2">
+        <h1 className="text-2xl font-headline font-bold text-primary">Digital Archive</h1>
+      </div>
+      <div className="flex items-center justify-between px-2 py-1">
+        <h2 className="text-sm font-semibold text-muted-foreground">Categories</h2>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAddCategory('')}>
+          <Plus className="h-4 w-4" />
+          <span className="sr-only">Add Root Category</span>
+        </Button>
+      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-2 space-y-1">
+            <button
+                onClick={() => onSelectCategory('All')}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors w-full ${
+                selectedCategory === 'All'
+                    ? 'bg-primary/20 text-primary font-semibold'
+                    : 'text-foreground/70 hover:bg-primary/10'
+                }`}
+            >
+                All Items
+            </button>
+
+            {categoryTree.children.map((node) => (
+                <CategoryTreeItem
+                    key={node.path}
+                    node={node}
+                    selectedCategory={selectedCategory}
+                    onSelectCategory={onSelectCategory}
+                    onAddCategory={onAddCategory}
+                    onDeleteCategory={onDeleteCategory}
+                />
+            ))}
+        </div>
+      </ScrollArea>
     </aside>
   );
 }
