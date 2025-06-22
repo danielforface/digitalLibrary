@@ -6,17 +6,13 @@ import {
   DialogDescription
 } from '@/components/ui/dialog';
 import type { ArchiveItem } from '@/lib/types';
-import UploadForm from './upload-form';
+import UploadForm, { type UploadFormData } from './upload-form';
 import ItemViewer from './item-viewer';
 
 type DialogState = {
   open: boolean;
   mode: 'view' | 'edit' | 'new';
   item?: ArchiveItem;
-};
-
-type UploadFormData = Omit<ArchiveItem, 'id' | 'createdAt' | 'updatedAt' | 'tags'> & {
-  tags?: string;
 };
 
 type ItemDialogProps = {

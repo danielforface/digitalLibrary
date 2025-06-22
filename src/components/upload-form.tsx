@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { ArchiveItem, FileType } from "@/lib/types"
+import type { ArchiveItem } from "@/lib/types"
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
@@ -25,11 +25,11 @@ const formSchema = z.object({
   description: z.string().min(1, "Description is required."),
   type: z.enum(["text", "image", "audio", "video", "pdf", "word"]),
   content: z.string().optional(),
-  url: z.string().url().optional().or(z.literal('')),
+  file: z.any().optional(),
   tags: z.string().optional(),
 });
 
-type UploadFormData = z.infer<typeof formSchema>;
+export type UploadFormData = z.infer<typeof formSchema>;
 
 type UploadFormProps = {
   onSubmit: (data: UploadFormData) => void;
@@ -47,7 +47,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
       description: itemToEdit?.description || "",
       type: itemToEdit?.type || "text",
       content: itemToEdit?.content || "",
-      url: itemToEdit?.url || "",
+      file: undefined,
       tags: itemToEdit?.tags?.join(', ') || "",
     },
   });
@@ -160,16 +160,20 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
         {['image', 'audio', 'video'].includes(selectedType) && (
           <FormField
             control={form.control}
-            name="url"
+            name="file"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>File URL</FormLabel>
+                <FormLabel>File</FormLabel>
                 <FormControl>
-                  <Input type="url" placeholder="https://..." {...field} />
+                  <Input 
+                    type="file"
+                    accept="image/*,audio/*,video/*"
+                    onChange={(e) => field.onChange(e.target.files)}
+                  />
                 </FormControl>
-                 <FormDescription>
-                    For demonstration, please provide a URL to the media file.
-                  </FormDescription>
+                <FormDescription>
+                  {itemToEdit?.url ? "Upload a new file to replace the current one." : "Upload a file from your device."}
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

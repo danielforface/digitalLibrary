@@ -7,18 +7,14 @@ import AppSidebar from '@/components/app-sidebar';
 import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
+import type { UploadFormData } from './upload-form';
 
 type DialogState = {
   open: boolean;
   mode: 'view' | 'edit' | 'new';
   item?: ArchiveItem;
 };
-
-type UploadFormData = Omit<ArchiveItem, 'id' | 'createdAt' | 'updatedAt' | 'tags'> & {
-  tags?: string;
-};
-
 
 export default function DigitalArchiveApp() {
   const [items, setItems] = useState<ArchiveItem[]>(initialData);
@@ -58,9 +54,31 @@ export default function DigitalArchiveApp() {
     setDialogState(prevState => ({ ...prevState, open: false }));
   };
 
-  const handleSubmit = (formData: UploadFormData) => {
-    const { tags: tagsString, ...itemData } = formData;
+  const handleSubmit = async (formData: UploadFormData) => {
+    const { tags: tagsString, file, ...itemData } = formData;
     const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+
+    let itemUrl = dialogState.mode === 'edit' ? dialogState.item?.url : undefined;
+
+    if (file && file.length > 0) {
+      const uploadedFile = file[0];
+      try {
+        itemUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target?.result as string);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(uploadedFile);
+        });
+      } catch (error) {
+        console.error("Error reading file:", error);
+        toast({
+          variant: 'destructive',
+          title: 'File Read Error',
+          description: 'Could not read the selected file.',
+        });
+        return;
+      }
+    }
 
     if (dialogState.mode === 'new') {
       const newItem: ArchiveItem = {
@@ -69,6 +87,7 @@ export default function DigitalArchiveApp() {
         id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        url: itemUrl,
       };
       setItems(prevItems => [newItem, ...prevItems]);
       toast({ title: "Success", description: "Item added to your archive." });
@@ -76,7 +95,7 @@ export default function DigitalArchiveApp() {
       setItems(prevItems =>
         prevItems.map(item =>
           item.id === dialogState.item!.id
-            ? { ...item, ...itemData, tags, updatedAt: new Date().toISOString() }
+            ? { ...item, ...itemData, tags, url: itemUrl, updatedAt: new Date().toISOString() }
             : item
         )
       );
@@ -107,6 +126,10 @@ export default function DigitalArchiveApp() {
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="p-0">
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <SheetDescription className="sr-only">
+            Select a category to browse the archive.
+          </SheetDescription>
           <AppSidebar
             categories={categories}
             selectedCategory={selectedCategory}
