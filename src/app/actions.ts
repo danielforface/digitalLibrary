@@ -8,9 +8,15 @@ import type { ArchiveItem } from '@/lib/types';
 import { remark } from 'remark';
 import strip from 'strip-markdown';
 
-const jsonPath = path.resolve(process.cwd(), 'archive-data.json');
-const categoriesJsonPath = path.resolve(process.cwd(), 'categories.json');
+const dataPath = path.resolve(process.cwd(), 'data');
+const jsonPath = path.join(dataPath, 'archive-data.json');
+const categoriesJsonPath = path.join(dataPath, 'categories.json');
 const uploadsPath = path.resolve(process.cwd(), 'public/uploads');
+
+// Helper to ensure data directory exists
+async function ensureDataDirectory() {
+    await fs.mkdir(dataPath, { recursive: true });
+}
 
 async function readData(): Promise<ArchiveItem[]> {
   try {
@@ -30,6 +36,7 @@ async function readData(): Promise<ArchiveItem[]> {
 }
 
 async function writeData(data: ArchiveItem[]): Promise<void> {
+  await ensureDataDirectory();
   await fs.writeFile(jsonPath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
@@ -38,6 +45,7 @@ async function readCategories(): Promise<string[]> {
   try {
     // Ensure the file exists before reading
     await fs.access(categoriesJsonPath).catch(async () => {
+        await ensureDataDirectory();
         await fs.writeFile(categoriesJsonPath, JSON.stringify([], null, 2), 'utf-8');
     });
     const fileContent = await fs.readFile(categoriesJsonPath, 'utf-8');
@@ -50,6 +58,7 @@ async function readCategories(): Promise<string[]> {
 }
 
 async function writeCategories(paths: string[]): Promise<void> {
+  await ensureDataDirectory();
   const uniqueSortedPaths = [...new Set(paths)].sort();
   await fs.writeFile(categoriesJsonPath, JSON.stringify(uniqueSortedPaths, null, 2), 'utf-8');
 }
