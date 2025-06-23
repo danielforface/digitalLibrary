@@ -37,9 +37,10 @@ type ArchiveCardProps = {
   onEdit: () => void;
   onMove: () => void;
   onDelete: () => void;
+  isAuthenticated: boolean;
 };
 
-export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete }: ArchiveCardProps) {
+export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete, isAuthenticated }: ArchiveCardProps) {
   return (
     <Card className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
       <button onClick={onView} className="text-left w-full h-full flex flex-col">
@@ -71,56 +72,58 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete }: 
         <p className="text-xs text-muted-foreground">
           Updated {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
         </p>
-        <AlertDialog>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-8 h-8">
-                <MoreVertical className="w-4 h-4" />
-                <span className="sr-only">More options</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
-                <Edit className="mr-2 h-4 w-4" />
-                <span>Edit</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onMove}>
-                <Move className="mr-2 h-4 w-4" />
-                <span>Move</span>
-              </DropdownMenuItem>
-              {item.url && (
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <a href={item.url} download={item.title}>
-                    <Download className="mr-2 h-4 w-4" />
-                    <span>Download</span>
-                  </a>
+        {isAuthenticated && (
+            <AlertDialog>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-8 h-8">
+                    <MoreVertical className="w-4 h-4" />
+                    <span className="sr-only">More options</span>
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Edit</span>
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>Delete</span>
+                <DropdownMenuItem onClick={onMove}>
+                    <Move className="mr-2 h-4 w-4" />
+                    <span>Move</span>
                 </DropdownMenuItem>
-              </AlertDialogTrigger>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the item
-                from your archive.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                {item.url && (
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                    <a href={item.url} download={item.title}>
+                        <Download className="mr-2 h-4 w-4" />
+                        <span>Download</span>
+                    </a>
+                    </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <AlertDialogTrigger asChild>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    <span>Delete</span>
+                    </DropdownMenuItem>
+                </AlertDialogTrigger>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the item
+                    from your archive.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                    Delete
+                </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+            </AlertDialog>
+        )}
       </CardFooter>
     </Card>
   );

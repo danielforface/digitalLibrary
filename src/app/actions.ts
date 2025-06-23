@@ -7,11 +7,20 @@ import path from 'path';
 import type { ArchiveItem } from '@/lib/types';
 import { remark } from 'remark';
 import strip from 'strip-markdown';
+import { cookies } from 'next/headers';
 
 const dataPath = path.resolve(process.cwd(), 'data');
 const jsonPath = path.join(dataPath, 'archive-data.json');
 const categoriesJsonPath = path.join(dataPath, 'categories.json');
 const uploadsPath = path.resolve(process.cwd(), 'public/uploads');
+
+async function verifyAuth() {
+  const cookieStore = cookies();
+  const isAdmin = cookieStore.get('is_admin_authed')?.value === 'true';
+  if (!isAdmin) {
+    throw new Error('Not authorized to perform this action.');
+  }
+}
 
 // Helper to ensure data directory exists
 async function ensureDataDirectory() {
@@ -73,6 +82,7 @@ export async function getCategoryPaths(): Promise<string[]> {
 }
 
 export async function addCategoryPath(newPath: string): Promise<void> {
+    await verifyAuth();
     try {
         const paths = await readCategories();
         if (!paths.includes(newPath)) {
@@ -88,6 +98,7 @@ export async function addCategoryPath(newPath: string): Promise<void> {
 }
 
 export async function deleteEmptyCategory(pathToDelete: string): Promise<void> {
+    await verifyAuth();
     try {
         const allCatPaths = await readCategories();
         const remainingCatPaths = allCatPaths.filter(p => p !== pathToDelete && !p.startsWith(`${pathToDelete}/`));
@@ -112,6 +123,7 @@ export async function getArchiveItems(): Promise<ArchiveItem[]> {
 }
 
 export async function createArchiveItem(formData: FormData): Promise<ArchiveItem> {
+  await verifyAuth();
   try {
     const data = await readData();
 
@@ -176,6 +188,7 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
 
 
 export async function updateArchiveItem(id: string, formData: FormData): Promise<ArchiveItem> {
+    await verifyAuth();
     try {
         const data = await readData();
         const itemIndex = data.findIndex(item => item.id === id);
@@ -252,6 +265,7 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
 
 
 export async function deleteArchiveItem(id: string): Promise<void> {
+    await verifyAuth();
     try {
         const data = await readData();
         const itemIndex = data.findIndex(item => item.id === id);
@@ -288,6 +302,7 @@ export async function handleCategoryAction(
   categoryToDelete: string,
   migrationPath?: string
 ): Promise<{ moved: number; deleted: number }> {
+    await verifyAuth();
     const data = await readData();
     const allCatPaths = await readCategories();
     let movedCount = 0;

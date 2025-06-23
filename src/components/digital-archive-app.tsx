@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { ArchiveItem, CategoryNode } from '@/lib/types';
 import AppSidebar from '@/components/app-sidebar';
 import ArchiveView from '@/components/archive-view';
@@ -14,6 +14,8 @@ import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
 import MoveItemDialog from './move-item-dialog';
 import AddCategoryDialog from './add-category-dialog';
+import LoginDialog from './login-dialog';
+import { checkAuth, logout } from '@/app/auth-actions';
 
 function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
@@ -80,18 +82,24 @@ export default function DigitalArchiveApp() {
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
   const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void | Promise<void>) | null>(null);
+
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setIsLoading(true);
-        const [itemData, categoryData] = await Promise.all([
+        const [itemData, categoryData, authStatus] = await Promise.all([
           getArchiveItems(),
           getCategoryPaths(),
+          checkAuth(),
         ]);
         setItems(itemData);
         setPersistedCategories(categoryData);
+        setIsAuthenticated(authStatus.isAuthenticated);
       } catch (error) {
         console.error(error);
         toast({
@@ -105,6 +113,15 @@ export default function DigitalArchiveApp() {
     };
     fetchAllData();
   }, [toast]);
+
+  const handleProtectedAction = useCallback((action: () => void | Promise<void>) => {
+    if (isAuthenticated) {
+        action();
+    } else {
+        setPendingAction(() => action);
+        setShowLoginDialog(true);
+    }
+  }, [isAuthenticated]);
 
   const categoryTree = useMemo(() => buildCategoryTree(items, persistedCategories), [items, persistedCategories]);
 
@@ -229,7 +246,7 @@ export default function DigitalArchiveApp() {
   };
 
   const handleAddCategoryRequest = (parentPath: string) => {
-    setAddCategoryParentPath(parentPath);
+     handleProtectedAction(() => setAddCategoryParentPath(parentPath));
   };
 
   const handleConfirmAddCategory = async (newCategoryName: string) => {
@@ -262,24 +279,23 @@ export default function DigitalArchiveApp() {
   };
 
 
-  const handleDeleteCategoryRequest = async (node: CategoryNode) => {
+  const handleDeleteCategoryRequest = (node: CategoryNode) => handleProtectedAction(() => {
     if (node.itemCount > 0) {
       setCategoryToDelete(node);
     } else {
         if(window.confirm(`Are you sure you want to delete the empty category "${node.path}"? This cannot be undone.`)) {
-            try {
-                await deleteEmptyCategory(node.path);
+            deleteEmptyCategory(node.path).then(() => {
                 setPersistedCategories(prev => prev.filter(p => p !== node.path && !p.startsWith(`${node.path}/`)));
                 toast({ title: 'Empty category removed.' });
                 if (selectedCategory.startsWith(node.path)) {
                     setSelectedCategory('All');
                 }
-            } catch (error) {
+            }).catch(error => {
                 toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
-            }
+            });
         }
     }
-  };
+  });
   
   const handleCloseDeleteDialog = () => {
       const path = categoryToDelete?.path;
@@ -292,7 +308,7 @@ export default function DigitalArchiveApp() {
   };
 
   const handleMoveRequest = (item: ArchiveItem) => {
-    setItemToMove(item);
+    handleProtectedAction(() => setItemToMove(item));
   };
 
   const handleCloseMoveDialog = () => {
@@ -340,6 +356,20 @@ export default function DigitalArchiveApp() {
       }
   };
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setShowLoginDialog(false);
+    if (pendingAction) {
+        pendingAction();
+        setPendingAction(null);
+    }
+  };
+
+  const handleLogout = async () => {
+      await logout();
+      setIsAuthenticated(false);
+      toast({ title: 'Logged out', description: 'You are now in view-only mode.'});
+  }
 
   return (
     <div className="flex h-screen bg-background">
@@ -350,6 +380,8 @@ export default function DigitalArchiveApp() {
         onSelectCategory={handleSelectCategory}
         onAddCategory={handleAddCategoryRequest}
         onDeleteCategory={handleDeleteCategoryRequest}
+        isAuthenticated={isAuthenticated}
+        onLogout={handleLogout}
       />
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -364,6 +396,8 @@ export default function DigitalArchiveApp() {
             onSelectCategory={handleSelectCategory}
             onAddCategory={handleAddCategoryRequest}
             onDeleteCategory={handleDeleteCategoryRequest}
+            isAuthenticated={isAuthenticated}
+            onLogout={handleLogout}
           />
         </SheetContent>
       </Sheet>
@@ -372,16 +406,17 @@ export default function DigitalArchiveApp() {
         {nowPlaying && <MiniAudioPlayer item={nowPlaying} onClose={() => setNowPlaying(null)} />}
         <ArchiveView
           items={filteredItems}
-          onUpload={() => handleOpenDialog('new')}
+          onUpload={() => handleProtectedAction(() => handleOpenDialog('new'))}
           onView={handleViewItem}
-          onEdit={(item) => handleOpenDialog('edit', item)}
+          onEdit={(item) => handleProtectedAction(() => handleOpenDialog('edit', item))}
           onMove={handleMoveRequest}
-          onDelete={handleDelete}
+          onDelete={(id) => handleProtectedAction(() => handleDelete(id))}
           categoryTitle={selectedCategory}
           onMenuClick={() => setMobileMenuOpen(true)}
           availableTags={availableTags}
           selectedTag={selectedTag}
           onSelectTag={setSelectedTag}
+          isAuthenticated={isAuthenticated}
         />
       </div>
       <ItemDialog
@@ -411,6 +446,14 @@ export default function DigitalArchiveApp() {
         onConfirm={handleConfirmAddCategory}
         parentPath={addCategoryParentPath ?? ''}
       />
+       <LoginDialog 
+        isOpen={showLoginDialog}
+        onClose={() => {
+            setShowLoginDialog(false);
+            setPendingAction(null);
+        }}
+        onSuccess={handleLoginSuccess}
+       />
     </div>
   );
 }

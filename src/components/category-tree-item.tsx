@@ -14,6 +14,7 @@ type CategoryTreeItemProps = {
   onAddCategory: (parentPath: string) => void;
   onDeleteCategory: (node: CategoryNode) => void;
   level?: number;
+  isAuthenticated: boolean;
 };
 
 export default function CategoryTreeItem({
@@ -23,6 +24,7 @@ export default function CategoryTreeItem({
   onAddCategory,
   onDeleteCategory,
   level = 0,
+  isAuthenticated,
 }: CategoryTreeItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -90,17 +92,19 @@ export default function CategoryTreeItem({
           <Folder className="h-4 w-4 shrink-0" />
           <span className="truncate">{node.name}</span>
         </button>
-
-        <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center shrink-0">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleAdd} aria-label={`Add subcategory to ${node.name}`}>
-                <Plus className="h-4 w-4"/>
-            </Button>
-            {node.path && (
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive/70 hover:text-destructive" onClick={handleDelete} aria-label={`Delete category ${node.name}`}>
-                    <Trash2 className="h-4 w-4"/>
+        
+        {isAuthenticated && (
+            <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center shrink-0">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleAdd} aria-label={`Add subcategory to ${node.name}`}>
+                    <Plus className="h-4 w-4"/>
                 </Button>
-            )}
-        </div>
+                {node.path && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive/70 hover:text-destructive" onClick={handleDelete} aria-label={`Delete category ${node.name}`}>
+                        <Trash2 className="h-4 w-4"/>
+                    </Button>
+                )}
+            </div>
+        )}
       </div>
       {isExpanded && hasChildren && (
         <div className="mt-1">
@@ -113,6 +117,7 @@ export default function CategoryTreeItem({
               onAddCategory={onAddCategory}
               onDeleteCategory={onDeleteCategory}
               level={level + 1}
+              isAuthenticated={isAuthenticated}
             />
           ))}
         </div>

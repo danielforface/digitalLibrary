@@ -19,9 +19,10 @@ type ArchiveViewProps = {
   availableTags: string[];
   selectedTag: string | null;
   onSelectTag: (tag: string | null) => void;
+  isAuthenticated: boolean;
 };
 
-export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, onDelete, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag }: ArchiveViewProps) {
+export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, onDelete, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag, isAuthenticated }: ArchiveViewProps) {
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
   const TAG_LIMIT = 5;
@@ -40,7 +41,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
         </div>
         <Button onClick={onUpload}>
           <Upload className="mr-2 h-4 w-4" />
-          Upload Content
+          {isAuthenticated ? 'Upload Content' : 'Admin Login'}
         </Button>
       </header>
 
@@ -93,6 +94,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
               onEdit={() => onEdit(item)}
               onMove={() => onMove(item)}
               onDelete={() => onDelete(item.id)}
+              isAuthenticated={isAuthenticated}
             />
           ))}
         </div>
