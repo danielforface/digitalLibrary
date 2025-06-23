@@ -42,7 +42,8 @@ export default function MoveItemDialog({ isOpen, onClose, item, allCategoryPaths
 
   const handleSubmit = () => {
     if (newCategory !== undefined) {
-        onConfirmMove(item.id, newCategory);
+        const finalNewCategory = newCategory === '__root__' ? '' : newCategory;
+        onConfirmMove(item.id, finalNewCategory);
     }
   };
 
@@ -63,7 +64,7 @@ export default function MoveItemDialog({ isOpen, onClose, item, allCategoryPaths
                     <SelectValue placeholder="Select a destination" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="">(Root Category)</SelectItem>
+                    <SelectItem value="__root__">(Root Category)</SelectItem>
                     {potentialMigrationPaths.map(path => (
                         <SelectItem key={path} value={path}>{path}</SelectItem>
                     ))}

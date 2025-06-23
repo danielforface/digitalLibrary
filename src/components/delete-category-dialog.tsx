@@ -50,16 +50,17 @@ export default function DeleteCategoryDialog({ isOpen, onClose, categoryNode, al
   const potentialMigrationPaths = allCategoryPaths.filter(p => p !== categoryNode.path && !p.startsWith(`${categoryNode.path}/`));
 
   const handleSubmit = async () => {
-    if (actionType === 'move' && !migrationPath && potentialMigrationPaths.length > 0) {
+    if (actionType === 'move' && migrationPath === '' && potentialMigrationPaths.length > 0) {
         toast({ variant: 'destructive', title: 'Error', description: 'Please select a category to move items to.' });
         return;
     }
 
     setIsSubmitting(true);
     try {
+        const finalMigrationPath = migrationPath === '__root__' ? '' : migrationPath;
         const result = await handleCategoryAction(
             categoryNode.path,
-            actionType === 'move' ? migrationPath : undefined
+            actionType === 'move' ? finalMigrationPath : undefined
         );
         
         if (actionType === 'move') {
@@ -107,7 +108,7 @@ export default function DeleteCategoryDialog({ isOpen, onClose, categoryNode, al
                                 <SelectValue placeholder="Select a destination" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">(Root Category)</SelectItem>
+                                <SelectItem value="__root__">(Root Category)</SelectItem>
                                 {potentialMigrationPaths.map(path => (
                                     <SelectItem key={path} value={path}>{path}</SelectItem>
                                 ))}
