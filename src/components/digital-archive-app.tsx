@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/
 import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
+import DeleteItemDialog from './delete-item-dialog';
 import MoveItemDialog from './move-item-dialog';
 import AddCategoryDialog from './add-category-dialog';
 import LoginDialog from './login-dialog';
@@ -29,20 +30,17 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
       const currentPath = parentPath ? `${parentPath}/${part}` : part;
       if (!nodes[currentPath]) {
         nodes[currentPath] = { name: part, path: currentPath, children: [], itemCount: 0 };
+        
+        // Ensure parent nodes are created
+        const parentParts = currentPath.split('/');
+        parentParts.pop();
+        const immediateParentPath = parentParts.join('/');
+        if (nodes[immediateParentPath] && !nodes[immediateParentPath].children.some(child => child.path === currentPath)) {
+            nodes[immediateParentPath].children.push(nodes[currentPath]);
+        }
       }
       return currentPath;
     }, '');
-  });
-
-  Object.values(nodes).forEach(node => {
-    if (node.path) {
-      const parts = node.path.split('/');
-      parts.pop();
-      const parentPath = parts.join('/');
-      if (nodes[parentPath] && !nodes[parentPath].children.some(child => child.path === node.path)) {
-        nodes[parentPath].children.push(node);
-      }
-    }
   });
 
   // Count items for each category directly
@@ -83,6 +81,7 @@ export default function DigitalArchiveApp() {
   const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<ArchiveItem | null>(null);
   const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -230,6 +229,12 @@ export default function DigitalArchiveApp() {
       });
     }
   };
+  
+  const handleConfirmDelete = async () => {
+      if (!itemToDelete) return;
+      await handleDelete(itemToDelete.id);
+      setItemToDelete(null);
+  };
 
   const handleSelectCategory = (category: string) => {
     setSelectedCategory(category);
@@ -363,7 +368,7 @@ export default function DigitalArchiveApp() {
   }
 
   return (
-    <div className="main-app-container flex h-screen bg-background">
+    <div className={cn("main-app-container flex h-screen bg-background", dir === 'rtl' ? 'flex-row-reverse' : '')}>
       <AppSidebar
         className="hidden md:flex"
         categoryTree={categoryTree}
@@ -401,7 +406,7 @@ export default function DigitalArchiveApp() {
           onView={handleViewItem}
           onEdit={(item) => handleProtectedAction(() => handleOpenDialog('edit', item))}
           onMove={handleMoveRequest}
-          onDelete={(id) => handleProtectedAction(() => handleDelete(id))}
+          onDeleteRequest={(item) => handleProtectedAction(() => setItemToDelete(item))}
           categoryTitle={selectedCategory}
           onMenuClick={() => setMobileMenuOpen(true)}
           availableTags={availableTags}
@@ -422,6 +427,12 @@ export default function DigitalArchiveApp() {
         onClose={handleCloseDeleteDialog}
         categoryNode={categoryToDelete}
         allCategoryPaths={allCategoryPaths}
+      />
+       <DeleteItemDialog
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        item={itemToDelete}
       />
       <MoveItemDialog
           isOpen={!!itemToMove}

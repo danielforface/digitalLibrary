@@ -16,7 +16,7 @@ type ArchiveViewProps = {
   onView: (item: ArchiveItem) => void;
   onEdit: (item: ArchiveItem) => void;
   onMove: (item: ArchiveItem) => void;
-  onDelete: (itemId: string) => void;
+  onDeleteRequest: (item: ArchiveItem) => void;
   categoryTitle: string;
   onMenuClick: () => void;
   availableTags: string[];
@@ -25,7 +25,7 @@ type ArchiveViewProps = {
   isAuthenticated: boolean;
 };
 
-export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, onDelete, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag, isAuthenticated }: ArchiveViewProps) {
+export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, onDeleteRequest, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag, isAuthenticated }: ArchiveViewProps) {
   const { t, dir } = useLanguage();
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
@@ -97,7 +97,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
               onView={() => onView(item)}
               onEdit={() => onEdit(item)}
               onMove={() => onMove(item)}
-              onDelete={() => onDelete(item.id)}
+              onDeleteRequest={() => onDeleteRequest(item)}
               isAuthenticated={isAuthenticated}
             />
           ))}
