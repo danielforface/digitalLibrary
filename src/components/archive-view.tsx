@@ -34,7 +34,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
   const displayTitle = categoryTitle === 'All' ? t('all_items') : categoryTitle.split('/').pop();
 
   return (
-    <main className="flex-1 overflow-y-auto p-6">
+    <main id="archive-view-container" tabIndex={-1} className="flex-1 overflow-y-auto p-6 outline-none">
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>

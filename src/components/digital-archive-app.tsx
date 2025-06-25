@@ -234,6 +234,12 @@ export default function DigitalArchiveApp() {
       if (!itemToDelete) return;
       await handleDelete(itemToDelete.id);
       setItemToDelete(null);
+      // Timeout ensures the dialog has time to close before we shift focus.
+      // This prevents the focus from being trapped in a hidden overlay.
+      setTimeout(() => {
+        const mainContent = document.getElementById('archive-view-container');
+        mainContent?.focus({ preventScroll: true });
+      }, 0);
   };
 
   const handleSelectCategory = (category: string) => {
