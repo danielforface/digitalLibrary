@@ -51,7 +51,7 @@ export default function AppSidebar({
                 onClick={() => onSelectCategory('All')}
                 className={cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors w-full',
-                  dir === 'rtl' ? 'text-right' : 'text-left',
+                  dir === 'rtl' ? 'text-right flex-row-reverse' : 'text-left',
                   selectedCategory === 'All'
                       ? 'bg-primary/20 text-primary font-semibold'
                       : 'text-foreground/70 hover:bg-primary/10'
