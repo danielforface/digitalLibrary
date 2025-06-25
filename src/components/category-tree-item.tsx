@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -66,6 +65,7 @@ export default function CategoryTreeItem({
       <div
         className={cn(
           'group flex items-center gap-1 rounded-md text-sm font-medium transition-colors w-full',
+          dir === 'rtl' && 'flex-row-reverse',
           selectedCategory === node.path ? 'bg-primary/20' : 'hover:bg-primary/10'
         )}
         style={{ paddingInlineStart: `${level * 0.75}rem` }}
