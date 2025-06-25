@@ -127,9 +127,11 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                     )}
                     <DropdownMenuSeparator />
                       <DropdownMenuItem 
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          onDeleteRequest();
+                        onSelect={() => {
+                          // Let the dropdown close, then open the dialog to prevent focus conflicts.
+                          setTimeout(() => {
+                            onDeleteRequest();
+                          }, 50);
                         }}
                         className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
                       >
