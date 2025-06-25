@@ -214,12 +214,13 @@ export default function DigitalArchiveApp() {
   };
 
 
-  const handleDelete = async (itemId: string) => {
-    try {
-      await deleteArchiveItem(itemId);
-      setItems(prevItems => prevItems.filter(item => item.id !== itemId));
-      toast({ title: t('item_deleted'), description: t('item_removed'), variant: 'destructive' });
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
 
+    try {
+      await deleteArchiveItem(itemToDelete.id);
+      setItems(prevItems => prevItems.filter(item => item.id !== itemToDelete!.id));
+      toast({ title: t('item_deleted'), description: t('item_removed'), variant: 'destructive' });
     } catch (error) {
       console.error("Error deleting item:", error);
       toast({
@@ -227,19 +228,13 @@ export default function DigitalArchiveApp() {
         title: t('error'),
         description: (error instanceof Error) ? error.message : t('could_not_delete_item'),
       });
-    }
-  };
-  
-  const handleConfirmDelete = async () => {
-      if (!itemToDelete) return;
-      await handleDelete(itemToDelete.id);
+    } finally {
       setItemToDelete(null);
-      // Timeout ensures the dialog has time to close before we shift focus.
-      // This prevents the focus from being trapped in a hidden overlay.
       setTimeout(() => {
         const mainContent = document.getElementById('archive-view-container');
         mainContent?.focus({ preventScroll: true });
-      }, 0);
+      }, 50);
+    }
   };
 
   const handleSelectCategory = (category: string) => {
@@ -374,7 +369,7 @@ export default function DigitalArchiveApp() {
   }
 
   return (
-    <div className={cn("main-app-container flex h-screen bg-background", dir === 'rtl' ? 'flex-row-reverse' : '')}>
+    <div className={cn("flex h-screen bg-background", dir === 'rtl' ? 'flex-row-reverse' : '')}>
       <AppSidebar
         className="hidden md:flex"
         categoryTree={categoryTree}
