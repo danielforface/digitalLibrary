@@ -26,6 +26,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from './ui/button';
 import { MoreVertical, Edit, Trash2, Download, Move, Eye } from 'lucide-react';
