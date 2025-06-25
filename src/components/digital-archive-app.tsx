@@ -15,6 +15,8 @@ import MoveItemDialog from './move-item-dialog';
 import AddCategoryDialog from './add-category-dialog';
 import LoginDialog from './login-dialog';
 import { checkAuth, logout } from '@/app/auth-actions';
+import { useLanguage } from '@/context/language-context';
+import { cn } from '@/lib/utils';
 
 function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
@@ -69,6 +71,7 @@ type DialogState = {
 };
 
 export default function DigitalArchiveApp() {
+  const { t, dir } = useLanguage();
   const [items, setItems] = useState<ArchiveItem[]>([]);
   const [persistedCategories, setPersistedCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -103,7 +106,7 @@ export default function DigitalArchiveApp() {
         console.error(error);
         toast({
           variant: 'destructive',
-          title: 'Error',
+          title: t('error'),
           description: 'Could not load archive data.',
         });
       } finally {
@@ -111,7 +114,7 @@ export default function DigitalArchiveApp() {
       }
     };
     fetchAllData();
-  }, [toast]);
+  }, [toast, t]);
 
   const handleProtectedAction = useCallback((action: () => void | Promise<void>) => {
     if (isAuthenticated) {
@@ -187,11 +190,11 @@ export default function DigitalArchiveApp() {
             item.id === updatedItem.id ? updatedItem : item
           )
         );
-        toast({ title: "Success", description: "Item updated." });
+        toast({ title: t('success'), description: t('item_updated') });
       } else {
         const newItem = await createArchiveItem(formData);
         setItems(prevItems => [newItem, ...prevItems]);
-        toast({ title: "Success", description: "Item added to your archive." });
+        toast({ title: t('success'), description: t('item_added') });
       }
 
       const category = formData.get('category') as string;
@@ -203,8 +206,8 @@ export default function DigitalArchiveApp() {
       console.error("Error submitting form:", error);
       toast({
         variant: 'destructive',
-        title: 'Submission Error',
-        description: (error instanceof Error) ? error.message : 'An unknown error occurred.',
+        title: t('submission_error'),
+        description: (error instanceof Error) ? error.message : t('unexpected_error'),
       });
     } finally {
         setIsSubmitting(false);
@@ -216,14 +219,14 @@ export default function DigitalArchiveApp() {
     try {
       await deleteArchiveItem(itemId);
       setItems(prevItems => prevItems.filter(item => item.id !== itemId));
-      toast({ title: "Item Deleted", description: "The item has been removed from your archive.", variant: 'destructive' });
+      toast({ title: t('item_deleted'), description: t('item_removed'), variant: 'destructive' });
 
     } catch (error) {
       console.error("Error deleting item:", error);
       toast({
         variant: 'destructive',
-        title: 'Error',
-        description: (error instanceof Error) ? error.message : 'Could not delete the item.',
+        title: t('error'),
+        description: (error instanceof Error) ? error.message : t('could_not_delete_item'),
       });
     }
   };
@@ -242,24 +245,24 @@ export default function DigitalArchiveApp() {
     if (addCategoryParentPath === null) return;
 
     if (newCategoryName.includes('/')) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Category name cannot contain slashes.' });
+        toast({ variant: 'destructive', title: t('error'), description: t('category_name_no_slashes') });
         return;
     }
     
     const newPath = addCategoryParentPath ? `${addCategoryParentPath}/${newCategoryName}` : newCategoryName;
 
     if (allCategoryPaths.includes(newPath)) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Category already exists.' });
+      toast({ variant: 'destructive', title: t('error'), description: t('category_already_exists') });
       return;
     }
 
     try {
       await addCategoryPath(newPath);
       setPersistedCategories(prev => [...prev, newPath].sort());
-      toast({ title: 'Category Added', description: `"${newPath}" is ready to be used.`});
+      toast({ title: t('category_added'), description: t('category_ready', { path: newPath })});
       setAddCategoryParentPath(null);
     } catch (error) {
-      toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+      toast({ variant: 'destructive', title: t('error'), description: (error as Error).message });
     }
   };
 
@@ -275,12 +278,12 @@ export default function DigitalArchiveApp() {
         if(window.confirm(`Are you sure you want to delete the empty category "${node.path}"? This cannot be undone.`)) {
             deleteEmptyCategory(node.path).then(() => {
                 setPersistedCategories(prev => prev.filter(p => p !== node.path && !p.startsWith(`${node.path}/`)));
-                toast({ title: 'Empty category removed.' });
+                toast({ title: t('empty_category_removed') });
                 if (selectedCategory.startsWith(node.path)) {
                     setSelectedCategory('All');
                 }
             }).catch(error => {
-                toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+                toast({ variant: 'destructive', title: t('error'), description: (error as Error).message });
             });
         }
     }
@@ -289,8 +292,6 @@ export default function DigitalArchiveApp() {
   const handleCloseDeleteDialog = () => {
       const path = categoryToDelete?.path;
       setCategoryToDelete(null);
-      // The action revalidates the path, so data will be refetched.
-      // We just need to navigate away if the current category was deleted.
       if (path && (selectedCategory === path || selectedCategory.startsWith(`${path}/`))) {
           setSelectedCategory('All');
       }
@@ -307,7 +308,7 @@ export default function DigitalArchiveApp() {
   const handleConfirmMove = async (itemId: string, newCategory: string) => {
       const itemToMove = items.find(i => i.id === itemId);
       if (!itemToMove) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Item not found.' });
+          toast({ variant: 'destructive', title: t('error'), description: t('item_not_found') });
           return;
       }
 
@@ -331,14 +332,14 @@ export default function DigitalArchiveApp() {
             )
           );
           
-          toast({ title: "Success", description: `Item moved to "${newCategory || 'Root'}".` });
+          toast({ title: t('success'), description: t('item_moved_to', { category: newCategory || t('root_category') }) });
           handleCloseMoveDialog();
       } catch (error) {
           console.error("Error moving item:", error);
           toast({
               variant: 'destructive',
-              title: 'Error',
-              description: (error instanceof Error) ? error.message : 'Could not move the item.',
+              title: t('error'),
+              description: (error instanceof Error) ? error.message : t('could_not_move_item'),
           });
       } finally {
           setIsSubmitting(false);
@@ -348,6 +349,7 @@ export default function DigitalArchiveApp() {
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
     setShowLoginDialog(false);
+    toast({ title: t('success'), description: t('logged_in_success') });
     if (pendingAction) {
         pendingAction();
         setPendingAction(null);
@@ -357,11 +359,11 @@ export default function DigitalArchiveApp() {
   const handleLogout = async () => {
       await logout();
       setIsAuthenticated(false);
-      toast({ title: 'Logged out', description: 'You are now in view-only mode.'});
+      toast({ title: t('logged_out'), description: t('view_only_mode')});
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className={cn("flex h-screen bg-background", dir === 'rtl' && 'flex-row-reverse')}>
       <AppSidebar
         className="hidden md:flex"
         categoryTree={categoryTree}
@@ -374,7 +376,7 @@ export default function DigitalArchiveApp() {
       />
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <SheetContent side="left" className="p-0">
+        <SheetContent side={dir === 'rtl' ? 'right' : 'left'} className="p-0">
           <SheetTitle className="sr-only">Menu</SheetTitle>
           <SheetDescription className="sr-only">
             Select a category to browse the archive.

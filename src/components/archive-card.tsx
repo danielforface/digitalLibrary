@@ -1,3 +1,6 @@
+
+'use client';
+
 import Image from 'next/image';
 import {
   Card,
@@ -23,15 +26,17 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Button } from './ui/button';
 import { MoreVertical, Edit, Trash2, Download, Move, Eye } from 'lucide-react';
 import type { ArchiveItem } from '@/lib/types';
 import FileIcon from './file-icon';
 import { formatDistanceToNow } from 'date-fns';
+import { enUS, he } from 'date-fns/locale';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/context/language-context';
+import { useEffect, useState } from 'react';
 
 type ArchiveCardProps = {
   item: ArchiveItem;
@@ -43,6 +48,17 @@ type ArchiveCardProps = {
 };
 
 export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete, isAuthenticated }: ArchiveCardProps) {
+  const { t, lang, dir } = useLanguage();
+  const [dateLocale, setDateLocale] = useState(enUS);
+
+  useEffect(() => {
+    if (lang === 'he') {
+      setDateLocale(he);
+    } else {
+      setDateLocale(enUS);
+    }
+  }, [lang]);
+
   return (
     <Card className="relative group overflow-hidden flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
       {item.coverImageUrl && (
@@ -64,8 +80,8 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete, is
       )}
       <div className="relative flex flex-col justify-between flex-grow">
         <div className="flex-grow">
-            <button onClick={onView} className="text-left w-full h-full flex flex-col">
-                <CardHeader className="flex-row items-start gap-4 space-y-0 pb-4">
+            <button onClick={onView} className={cn("w-full h-full flex flex-col", dir === 'rtl' ? 'text-right' : 'text-left')}>
+                <CardHeader className={cn("flex-row items-start gap-4 space-y-0 pb-4", dir === 'rtl' && 'flex-row-reverse')}>
                     <div className={cn("p-3 rounded-lg", item.coverImageUrl ? "bg-white/20" : "bg-primary/10")}>
                         <FileIcon type={item.type} className={cn("w-6 h-6", item.coverImageUrl ? "text-white" : "text-primary")} />
                     </div>
@@ -81,7 +97,7 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete, is
                     </p>
                 )}
                 {item.tags && item.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className={cn("mt-4 flex flex-wrap gap-2", dir === 'rtl' && 'justify-end')}>
                     {item.tags.map(tag => (
                         <Badge key={tag} variant={item.coverImageUrl ? "default" : "secondary"}>{tag}</Badge>
                     ))}
@@ -92,7 +108,7 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete, is
         </div>
         <CardFooter className="flex justify-between items-center pt-4">
             <p className={cn("text-xs", item.coverImageUrl ? "text-neutral-300" : "text-muted-foreground")}>
-            Updated {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: dateLocale })}
             </p>
             {isAuthenticated && (
                 <AlertDialog>
@@ -100,47 +116,46 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDelete, is
                     <DropdownMenuTrigger asChild>
                     <Button variant={item.coverImageUrl ? "secondary" : "ghost"} size="icon" className="w-8 h-8">
                         <MoreVertical className="w-4 h-4" />
-                        <span className="sr-only">More options</span>
+                        <span className="sr-only">{t('more_options')}</span>
                     </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align={dir === 'rtl' ? 'start' : 'end'}>
                     <DropdownMenuItem onClick={onEdit}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Edit</span>
+                        <Edit className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                        <span>{t('edit')}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={onMove}>
-                        <Move className="mr-2 h-4 w-4" />
-                        <span>Move</span>
+                        <Move className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                        <span>{t('move')}</span>
                     </DropdownMenuItem>
                     {item.url && (
                         <DropdownMenuItem asChild className="cursor-pointer">
                         <a href={item.url} download={item.title}>
-                            <Download className="mr-2 h-4 w-4" />
-                            <span>Download</span>
+                            <Download className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                            <span>{t('download')}</span>
                         </a>
                         </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator />
                     <AlertDialogTrigger asChild>
                         <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete</span>
+                        <Trash2 className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                        <span>{t('delete')}</span>
                         </DropdownMenuItem>
                     </AlertDialogTrigger>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('are_you_sure')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the item
-                        from your archive.
+                        {t('delete_item_confirm')}
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                     <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-                        Delete
+                        {t('delete')}
                     </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

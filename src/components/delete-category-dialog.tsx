@@ -5,8 +5,6 @@ import { useState, useEffect } from 'react';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import {
     AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
     AlertDialogFooter,
@@ -20,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { CategoryNode } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { handleCategoryAction } from '@/app/actions';
+import { useLanguage } from '@/context/language-context';
 
 type DeleteCategoryDialogProps = {
   isOpen: boolean;
@@ -31,6 +30,7 @@ type DeleteCategoryDialogProps = {
 type ActionType = 'move' | 'delete';
 
 export default function DeleteCategoryDialog({ isOpen, onClose, categoryNode, allCategoryPaths }: DeleteCategoryDialogProps) {
+  const { t } = useLanguage();
   const [actionType, setActionType] = useState<ActionType>('move');
   const [migrationPath, setMigrationPath] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +51,7 @@ export default function DeleteCategoryDialog({ isOpen, onClose, categoryNode, al
 
   const handleSubmit = async () => {
     if (actionType === 'move' && migrationPath === '' && potentialMigrationPaths.length > 0) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Please select a category to move items to.' });
+        toast({ variant: 'destructive', title: t('error'), description: t('please_select_destination') });
         return;
     }
 
@@ -64,14 +64,14 @@ export default function DeleteCategoryDialog({ isOpen, onClose, categoryNode, al
         );
         
         if (actionType === 'move') {
-            toast({ title: 'Success', description: `${result.moved} item(s) have been moved.` });
+            toast({ title: t('success'), description: t('items_moved', { count: result.moved }) });
         } else {
-            toast({ variant: 'destructive', title: 'Category Deleted', description: `${result.deleted} item(s) have been deleted.` });
+            toast({ variant: 'destructive', title: t('category_deleted'), description: t('items_deleted', { count: result.deleted }) });
         }
         onClose();
     } catch (error) {
         console.error("Error handling category action:", error);
-        toast({ variant: 'destructive', title: 'Error', description: (error as Error).message });
+        toast({ variant: 'destructive', title: t('error'), description: (error as Error).message });
     } finally {
         setIsSubmitting(false);
     }
@@ -81,9 +81,9 @@ export default function DeleteCategoryDialog({ isOpen, onClose, categoryNode, al
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete category: "{categoryName}"</AlertDialogTitle>
+          <AlertDialogTitle>{t('delete_category_title', { categoryName })}</AlertDialogTitle>
           <AlertDialogDescription>
-            This category and its subcategories contain {categoryNode.itemCount} item(s). What would you like to do with them?
+            {t('delete_category_desc', { count: categoryNode.itemCount })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         
@@ -91,46 +91,46 @@ export default function DeleteCategoryDialog({ isOpen, onClose, categoryNode, al
             <RadioGroup value={actionType} onValueChange={(value) => setActionType(value as ActionType)}>
                 <div className="flex items-center space-x-2">
                     <RadioGroupItem value="move" id="move" />
-                    <Label htmlFor="move">Move items to another category</Label>
+                    <Label htmlFor="move">{t('move_items_to_another_category')}</Label>
                 </div>
                  <div className="flex items-center space-x-2">
                     <RadioGroupItem value="delete" id="delete" />
-                    <Label htmlFor="delete">Delete all items permanently</Label>
+                    <Label htmlFor="delete">{t('delete_all_items_permanently')}</Label>
                 </div>
             </RadioGroup>
 
             {actionType === 'move' && (
                 <div className="pl-6 pt-2">
-                    <Label htmlFor="migration-path">Move to:</Label>
+                    <Label htmlFor="migration-path">{t('move_to')}</Label>
                     {potentialMigrationPaths.length > 0 ? (
                         <Select onValueChange={setMigrationPath} value={migrationPath}>
                             <SelectTrigger id="migration-path" className="w-full mt-1">
-                                <SelectValue placeholder="Select a destination" />
+                                <SelectValue placeholder={t('select_a_destination')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="__root__">(Root Category)</SelectItem>
+                                <SelectItem value="__root__">{t('root_category')}</SelectItem>
                                 {potentialMigrationPaths.map(path => (
                                     <SelectItem key={path} value={path}>{path}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     ) : (
-                        <p className="text-sm text-muted-foreground mt-2">No other categories available to move to.</p>
+                        <p className="text-sm text-muted-foreground mt-2">{t('no_other_categories')}</p>
                     )}
                 </div>
             )}
              {actionType === 'delete' && (
                 <div className="pl-6 pt-2 flex items-start gap-2 text-destructive">
                     <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0"/>
-                    <p className="text-sm">This action is irreversible. All items within "{categoryName}" and its subcategories will be permanently deleted.</p>
+                    <p className="text-sm">{t('irreversible_action_warning', { categoryName })}</p>
                 </div>
             )}
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose} disabled={isSubmitting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose} disabled={isSubmitting}>{t('cancel')}</AlertDialogCancel>
           <Button onClick={handleSubmit} disabled={isSubmitting} variant={actionType === 'delete' ? 'destructive' : 'default'}>
-            {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirm'}
+            {isSubmitting ? <Loader2 className="animate-spin" /> : t('confirm')}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

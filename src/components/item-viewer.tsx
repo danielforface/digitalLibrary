@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -8,12 +9,15 @@ import { Button } from './ui/button';
 import { Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useLanguage } from '@/context/language-context';
+import { cn } from '@/lib/utils';
 
 type ItemViewerProps = {
   item: ArchiveItem;
 };
 
 export default function ItemViewer({ item }: ItemViewerProps) {
+  const { t, dir } = useLanguage();
   const [absoluteUrl, setAbsoluteUrl] = useState('');
 
   useEffect(() => {
@@ -31,7 +35,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
       return (
         <div className="text-center p-8 bg-secondary rounded-lg">
           <FileIcon type={item.type} className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">File not available for this item.</p>
+          <p className="text-muted-foreground">{t('file_not_available')}</p>
         </div>
       );
     }
@@ -69,11 +73,8 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         );
       case 'word':
         if (!absoluteUrl) {
-          return <p className="text-center py-8">Loading document viewer...</p>;
+          return <p className="text-center py-8">{t('loading_document_viewer')}</p>;
         }
-        // Google Docs Viewer requires a publicly accessible URL.
-        // It will not work with localhost or local network IPs during development.
-        // This feature will work correctly once the app is deployed to a live server.
         return (
           <div className="w-full h-full rounded-lg overflow-hidden border">
             <iframe
@@ -84,7 +85,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
           </div>
         );
       default:
-        return <p>Unsupported file type.</p>;
+        return <p>{t('unsupported_file_type')}</p>;
     }
   };
 
@@ -96,11 +97,11 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         {renderContent()}
       </div>
       {showDownloadButton && item.url && (
-        <div className="text-right pt-2 flex-shrink-0">
+        <div className={cn("pt-2 flex-shrink-0", dir === 'rtl' ? 'text-left' : 'text-right')}>
           <Button asChild>
             <a href={item.url} download={item.title}>
-              <Download className="mr-2 h-4 w-4" />
-              Download
+              <Download className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+              {t('download')}
             </a>
           </Button>
         </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,6 +7,8 @@ import ArchiveCard from './archive-card';
 import { Button } from './ui/button';
 import { Menu, Upload, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { useLanguage } from '@/context/language-context';
+import { cn } from '@/lib/utils';
 
 type ArchiveViewProps = {
   items: ArchiveItem[];
@@ -23,11 +26,12 @@ type ArchiveViewProps = {
 };
 
 export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, onDelete, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag, isAuthenticated }: ArchiveViewProps) {
+  const { t, dir } = useLanguage();
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
   const TAG_LIMIT = 5;
   const visibleTags = tagsExpanded ? availableTags : availableTags.slice(0, TAG_LIMIT);
-  const displayTitle = categoryTitle === 'All' ? 'All Items' : categoryTitle.split('/').pop();
+  const displayTitle = categoryTitle === 'All' ? t('all_items') : categoryTitle.split('/').pop();
 
   return (
     <main className="flex-1 overflow-y-auto p-6">
@@ -35,13 +39,13 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
             <Menu className="h-6 w-6" />
-            <span className="sr-only">Open Menu</span>
+            <span className="sr-only">{t('open_menu')}</span>
           </Button>
           <h2 className="text-3xl font-headline font-semibold">{displayTitle}</h2>
         </div>
         <Button onClick={onUpload}>
-          <Upload className="mr-2 h-4 w-4" />
-          {isAuthenticated ? 'Upload Content' : 'Admin Login'}
+          <Upload className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+          {isAuthenticated ? t('upload_content') : t('admin_login')}
         </Button>
       </header>
 
@@ -56,7 +60,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
                   : 'bg-secondary/50 hover:bg-secondary'
               }`}
             >
-              All Tags
+              {t('all_tags')}
             </button>
             {visibleTags.map(tag => (
               <button
@@ -76,7 +80,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
                 onClick={() => setTagsExpanded(!tagsExpanded)}
                 className="flex items-center gap-1 px-3 py-1 text-sm rounded-full text-muted-foreground hover:bg-secondary/80 transition-colors"
               >
-                {tagsExpanded ? 'Show less' : `Show ${availableTags.length - TAG_LIMIT} more`}
+                {tagsExpanded ? t('show_less') : t('show_more', {count: availableTags.length - TAG_LIMIT})}
                 {tagsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
             )}
@@ -100,8 +104,8 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-[60vh] border-2 border-dashed rounded-lg text-center p-4">
-            <p className="text-muted-foreground text-lg">No items match your criteria.</p>
-            <p className="text-muted-foreground">Try selecting a different category or tag.</p>
+            <p className="text-muted-foreground text-lg">{t('no_items_found')}</p>
+            <p className="text-muted-foreground">{t('no_items_found_desc')}</p>
         </div>
       )}
     </main>

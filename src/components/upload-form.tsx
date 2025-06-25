@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ArchiveItem } from "@/lib/types"
+import { useLanguage } from "@/context/language-context";
 
 const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -57,6 +58,8 @@ type UploadFormProps = {
 };
 
 export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone, isSubmitting }: UploadFormProps) {
+  const { t } = useLanguage();
+  
   const form = useForm<UploadFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -122,9 +125,9 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel>{t('form_title')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Reflections on Modern Art" {...field} />
+                  <Input placeholder={t('form_title_placeholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -135,20 +138,20 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>File Type</FormLabel>
+                <FormLabel>{t('form_file_type')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a file type" />
+                      <SelectValue placeholder={t('form_file_type_placeholder')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="image">Image</SelectItem>
-                    <SelectItem value="audio">Audio</SelectItem>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="pdf">PDF</SelectItem>
-                    <SelectItem value="word">Word Document</SelectItem>
+                    <SelectItem value="text">{t('text')}</SelectItem>
+                    <SelectItem value="image">{t('image')}</SelectItem>
+                    <SelectItem value="audio">{t('audio')}</SelectItem>
+                    <SelectItem value="video">{t('video')}</SelectItem>
+                    <SelectItem value="pdf">{t('pdf')}</SelectItem>
+                    <SelectItem value="word">{t('word')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -160,8 +163,8 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="category"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Input placeholder="e.g., Writings, Media" {...field} list="category-suggestions" />
+                <FormLabel>{t('form_category')}</FormLabel>
+                <Input placeholder={t('form_category_placeholder')} {...field} list="category-suggestions" />
                 <datalist id="category-suggestions">
                     {allCategories.map(cat => <option key={cat} value={cat} />)}
                 </datalist>
@@ -174,9 +177,9 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
+                <FormLabel>{t('form_description')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., Art History" {...field} />
+                  <Input placeholder={t('form_description_placeholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -187,12 +190,12 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="tags"
             render={({ field }) => (
               <FormItem className="md:col-span-2">
-                <FormLabel>Tags</FormLabel>
+                <FormLabel>{t('form_tags')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g., inspiration, draft, final" {...field} />
+                  <Input placeholder={t('form_tags_placeholder')} {...field} />
                 </FormControl>
                 <FormDescription>
-                  Enter tags separated by commas.
+                  {t('form_tags_desc')}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -206,12 +209,12 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="content"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Content</FormLabel>
+                <FormLabel>{t('form_content')}</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Type your text here..." {...field} className="min-h-[150px]" />
+                  <Textarea placeholder={t('form_content_placeholder')} {...field} className="min-h-[150px]" />
                 </FormControl>
                 <FormDescription>
-                  You can use Markdown for rich text formatting.
+                  {t('form_content_desc')}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -225,7 +228,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="file"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Main File</FormLabel>
+                <FormLabel>{t('form_main_file')}</FormLabel>
                 <FormControl>
                   <Input 
                     type="file"
@@ -234,7 +237,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                   />
                 </FormControl>
                 <FormDescription>
-                  {itemToEdit?.url ? "Upload a new file to replace the current one." : "Upload a file from your device."}
+                  {itemToEdit?.url ? t('form_main_file_desc_edit') : t('form_main_file_desc_new')}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -243,7 +246,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
         )}
 
         <div className="md:col-span-2 space-y-4 rounded-lg border p-4">
-            <h3 className="text-lg font-medium">Cover Photo</h3>
+            <h3 className="text-lg font-medium">{t('form_cover_photo')}</h3>
             {itemToEdit?.coverImageUrl && (
                 <FormField
                     control={form.control}
@@ -257,7 +260,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                         />
                         </FormControl>
                         <FormLabel className="font-normal">
-                            Remove current cover photo
+                            {t('form_remove_cover_photo')}
                         </FormLabel>
                     </FormItem>
                     )}
@@ -268,7 +271,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                 name="coverImage"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Upload Photo</FormLabel>
+                    <FormLabel>{t('form_upload_photo')}</FormLabel>
                     <FormControl>
                     <Input 
                         type="file"
@@ -278,7 +281,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                     />
                     </FormControl>
                     <FormDescription>
-                    {itemToEdit?.coverImageUrl ? "Upload a new photo to replace the current one." : "Upload an optional cover photo."}
+                    {itemToEdit?.coverImageUrl ? t('form_upload_photo_desc_edit') : t('form_upload_photo_desc_new')}
                     </FormDescription>
                     <FormMessage />
                 </FormItem>
@@ -287,10 +290,10 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
         </div>
 
         <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={onDone} disabled={isSubmitting}>Cancel</Button>
+            <Button type="button" variant="ghost" onClick={onDone} disabled={isSubmitting}>{t('cancel')}</Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {itemToEdit ? 'Save Changes' : 'Add to Archive'}
+              {itemToEdit ? t('save_changes') : t('add_to_archive')}
             </Button>
         </div>
       </form>

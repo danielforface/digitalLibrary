@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { useLanguage } from '@/context/language-context';
 
 type AddCategoryDialogProps = {
   isOpen: boolean;
@@ -21,6 +23,7 @@ type AddCategoryDialogProps = {
 };
 
 export default function AddCategoryDialog({ isOpen, onClose, onConfirm, parentPath }: AddCategoryDialogProps) {
+  const { t } = useLanguage();
   const [categoryName, setCategoryName] = useState('');
 
   useEffect(() => {
@@ -41,34 +44,34 @@ export default function AddCategoryDialog({ isOpen, onClose, onConfirm, parentPa
     }
   };
 
-  const parentDisplayName = parentPath === '' ? 'Root' : parentPath.split('/').pop();
+  const parentDisplayName = parentPath === '' ? t('root_category') : parentPath.split('/').pop();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Category</DialogTitle>
+          <DialogTitle>{t('add_new_category')}</DialogTitle>
           <DialogDescription>
-            Enter a name for the new category inside "{parentDisplayName}".
+            {t('add_category_desc', { parentName: parentDisplayName })}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-2 py-4">
-            <Label htmlFor="category-name">Category Name:</Label>
+            <Label htmlFor="category-name">{t('category_name')}</Label>
             <Input 
               id="category-name" 
               value={categoryName}
               onChange={(e) => setCategoryName(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="e.g., Projects"
+              placeholder={t('category_name_placeholder')}
               autoFocus
             />
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
           <Button onClick={handleSubmit} disabled={!categoryName.trim()}>
-            Add Category
+            {t('add_category')}
           </Button>
         </DialogFooter>
       </DialogContent>

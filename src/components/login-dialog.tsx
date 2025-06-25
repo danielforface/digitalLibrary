@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { login } from '@/app/auth-actions';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 type LoginDialogProps = {
   isOpen: boolean;
@@ -24,27 +25,27 @@ type LoginDialogProps = {
 };
 
 export default function LoginDialog({ isOpen, onClose, onSuccess }: LoginDialogProps) {
+  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async () => {
     if (!password.trim()) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Password cannot be empty.' });
+        toast({ variant: 'destructive', title: t('error'), description: t('password_empty') });
         return;
     }
     setIsLoading(true);
     try {
         const result = await login(password);
         if (result.success) {
-            toast({ title: 'Success', description: 'You are now logged in.' });
             onSuccess();
         } else {
-            toast({ variant: 'destructive', title: 'Login Failed', description: result.message });
+            toast({ variant: 'destructive', title: t('login_failed'), description: result.message });
         }
     } catch (error) {
         console.error("Login error:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'An unexpected error occurred.' });
+        toast({ variant: 'destructive', title: t('error'), description: t('unexpected_error') });
     } finally {
         setIsLoading(false);
         setPassword('');
@@ -66,30 +67,30 @@ export default function LoginDialog({ isOpen, onClose, onSuccess }: LoginDialogP
     }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Admin Access Required</DialogTitle>
+          <DialogTitle>{t('admin_access_required')}</DialogTitle>
           <DialogDescription>
-            Please enter the admin password to proceed.
+            {t('admin_access_desc')}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-2 py-4">
-            <Label htmlFor="password">Password:</Label>
+            <Label htmlFor="password">{t('password')}</Label>
             <Input 
               id="password" 
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Enter admin password"
+              placeholder={t('password_placeholder')}
               autoFocus
             />
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} disabled={isLoading}>Cancel</Button>
+          <Button variant="ghost" onClick={onClose} disabled={isLoading}>{t('cancel')}</Button>
           <Button onClick={handleSubmit} disabled={isLoading || !password.trim()}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Login
+            {t('login')}
           </Button>
         </DialogFooter>
       </DialogContent>

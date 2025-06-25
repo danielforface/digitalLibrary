@@ -1,9 +1,14 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+}
+
+html[lang="he"] body {
+    font-family: 'Rubik', sans-serif;
 }
 
 @layer base {
@@ -84,6 +89,9 @@ body {
   .prose blockquote {
     @apply border-l-4 border-primary/50 pl-4 italic text-muted-foreground my-4;
   }
+  html[dir="rtl"] .prose blockquote {
+    @apply border-l-0 border-r-4 pl-0 pr-4;
+  }
   .prose ul {
     @apply list-disc list-inside my-4;
   }
@@ -110,6 +118,9 @@ body {
   }
   .prose th {
     @apply border border-border px-4 py-2 text-left font-semibold;
+  }
+  html[dir="rtl"] .prose th {
+    @apply text-right;
   }
   .prose td {
     @apply border border-border px-4 py-2;

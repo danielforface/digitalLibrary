@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ArchiveItem } from '@/lib/types';
+import { useLanguage } from '@/context/language-context';
 
 type MoveItemDialogProps = {
   isOpen: boolean;
@@ -27,6 +28,7 @@ type MoveItemDialogProps = {
 };
 
 export default function MoveItemDialog({ isOpen, onClose, item, allCategoryPaths, onConfirmMove, isSubmitting }: MoveItemDialogProps) {
+  const { t } = useLanguage();
   const [newCategory, setNewCategory] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -51,20 +53,20 @@ export default function MoveItemDialog({ isOpen, onClose, item, allCategoryPaths
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Move Item</AlertDialogTitle>
+          <AlertDialogTitle>{t('move_item_title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Move "{item.title}" to a different category.
+            {t('move_item_desc', { title: item.title })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         
         <div className="space-y-2 py-4">
-            <Label htmlFor="migration-path">New Category:</Label>
+            <Label htmlFor="migration-path">{t('new_category')}</Label>
             <Select onValueChange={setNewCategory} value={newCategory}>
                 <SelectTrigger id="migration-path" className="w-full mt-1">
-                    <SelectValue placeholder="Select a destination" />
+                    <SelectValue placeholder={t('select_a_destination')} />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="__root__">(Root Category)</SelectItem>
+                    <SelectItem value="__root__">{t('root_category')}</SelectItem>
                     {potentialMigrationPaths.map(path => (
                         <SelectItem key={path} value={path}>{path}</SelectItem>
                     ))}
@@ -73,9 +75,9 @@ export default function MoveItemDialog({ isOpen, onClose, item, allCategoryPaths
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose} disabled={isSubmitting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose} disabled={isSubmitting}>{t('cancel')}</AlertDialogCancel>
           <Button onClick={handleSubmit} disabled={isSubmitting || newCategory === undefined}>
-            {isSubmitting ? <Loader2 className="animate-spin" /> : 'Move Item'}
+            {isSubmitting ? <Loader2 className="animate-spin" /> : t('move_item_btn')}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

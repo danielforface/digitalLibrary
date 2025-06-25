@@ -2,6 +2,7 @@
 import type { ArchiveItem } from '@/lib/types';
 import { Music, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { useLanguage } from '@/context/language-context';
 
 type MiniAudioPlayerProps = {
   item: ArchiveItem;
@@ -9,6 +10,7 @@ type MiniAudioPlayerProps = {
 };
 
 export default function MiniAudioPlayer({ item, onClose }: MiniAudioPlayerProps) {
+  const { t } = useLanguage();
   if (!item.url) return null;
 
   return (
@@ -20,7 +22,7 @@ export default function MiniAudioPlayer({ item, onClose }: MiniAudioPlayerProps)
       <audio controls autoPlay src={item.url} className="h-10 rounded-md" />
       <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-primary/10 h-9 w-9 flex-shrink-0">
         <X className="h-5 w-5" />
-        <span className="sr-only">Close player</span>
+        <span className="sr-only">{t('close_player')}</span>
       </Button>
     </div>
   );

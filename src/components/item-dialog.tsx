@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,7 @@ import type { ArchiveItem } from '@/lib/types';
 import UploadForm, { type UploadFormData } from './upload-form';
 import ItemViewer from './item-viewer';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/context/language-context';
 
 type DialogState = {
   open: boolean;
@@ -25,11 +27,22 @@ type ItemDialogProps = {
 };
 
 export default function ItemDialog({ dialogState, onClose, onSubmit, allCategories, isSubmitting }: ItemDialogProps) {
+  const { t } = useLanguage();
   const { open, mode, item } = dialogState;
 
   const isWordDocument = mode === 'view' && item?.type === 'word';
-  const title = mode === 'new' ? 'Upload Content' : mode === 'edit' ? 'Edit Item' : item?.title || 'View Item';
-  const description = mode === 'new' ? 'Add a new file to your digital archive.' : mode === 'edit' ? 'Update the details for this item.' : item?.description || '';
+  
+  const title = mode === 'new' 
+    ? t('upload_content_title') 
+    : mode === 'edit' 
+    ? t('edit_item_title') 
+    : item?.title || t('view_item_title');
+    
+  const description = mode === 'new' 
+    ? t('add_new_file_desc')
+    : mode === 'edit' 
+    ? t('update_item_desc')
+    : item?.description || '';
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

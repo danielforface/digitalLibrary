@@ -6,6 +6,7 @@ import { Folder, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CategoryNode } from '@/lib/types';
 import { Button } from './ui/button';
+import { useLanguage } from '@/context/language-context';
 
 type CategoryTreeItemProps = {
   node: CategoryNode;
@@ -26,6 +27,7 @@ export default function CategoryTreeItem({
   level = 0,
   isAuthenticated,
 }: CategoryTreeItemProps) {
+  const { t, dir } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function CategoryTreeItem({
           'group flex items-center gap-1 rounded-md text-sm font-medium transition-colors w-full',
           selectedCategory === node.path ? 'bg-primary/20' : 'hover:bg-primary/10'
         )}
-        style={{ paddingLeft: `${level * 0.75}rem` }}
+        style={{ paddingInlineStart: `${level * 0.75}rem` }}
       >
         {hasChildren ? (
           <button
@@ -75,7 +77,11 @@ export default function CategoryTreeItem({
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <ChevronRight
-              className={cn('h-4 w-4 shrink-0 transition-transform duration-200', isExpanded && 'rotate-90')}
+              className={cn(
+                  'h-4 w-4 shrink-0 transition-transform duration-200', 
+                  isExpanded && 'rotate-90',
+                  dir === 'rtl' && '-scale-x-100'
+                )}
             />
           </button>
         ) : (
@@ -85,7 +91,8 @@ export default function CategoryTreeItem({
         <button
           onClick={handleSelect}
           className={cn(
-            'flex flex-1 items-center gap-2 text-left py-2 pr-2 truncate',
+            'flex flex-1 items-center gap-2 py-2 truncate',
+            dir === 'rtl' ? 'text-right flex-row-reverse' : 'text-left',
             selectedCategory === node.path ? 'text-primary font-semibold' : 'text-foreground/80'
           )}
         >
@@ -94,12 +101,12 @@ export default function CategoryTreeItem({
         </button>
         
         {isAuthenticated && (
-            <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center shrink-0">
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleAdd} aria-label={`Add subcategory to ${node.name}`}>
+            <div className={cn("opacity-0 group-hover:opacity-100 transition-opacity flex items-center shrink-0", dir === 'rtl' ? 'pl-2' : 'pr-2')}>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleAdd} aria-label={t('add_subcategory_to', {name: node.name})}>
                     <Plus className="h-4 w-4"/>
                 </Button>
                 {node.path && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive/70 hover:text-destructive" onClick={handleDelete} aria-label={`Delete category ${node.name}`}>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive/70 hover:text-destructive" onClick={handleDelete} aria-label={t('delete_category', {name: node.name})}>
                         <Trash2 className="h-4 w-4"/>
                     </Button>
                 )}
