@@ -8,7 +8,6 @@ import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import type { UploadFormData } from './upload-form';
 import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
@@ -177,23 +176,12 @@ export default function DigitalArchiveApp() {
     setDialogState(prevState => ({ ...prevState, open: false }));
   };
 
-  const handleSubmit = async (formData: UploadFormData) => {
+  const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
-    const apiFormData = new FormData();
-
-    Object.entries(formData).forEach(([key, value]) => {
-      if (key === 'file') {
-        if (value instanceof FileList && value.length > 0) {
-          apiFormData.append('file', value[0]);
-        }
-      } else if (value !== undefined && value !== null) {
-        apiFormData.append(key, String(value));
-      }
-    });
-
+    
     try {
       if (dialogState.mode === 'edit' && dialogState.item) {
-        const updatedItem = await updateArchiveItem(dialogState.item.id, apiFormData);
+        const updatedItem = await updateArchiveItem(dialogState.item.id, formData);
         setItems(prevItems =>
           prevItems.map(item =>
             item.id === updatedItem.id ? updatedItem : item
@@ -201,13 +189,14 @@ export default function DigitalArchiveApp() {
         );
         toast({ title: "Success", description: "Item updated." });
       } else {
-        const newItem = await createArchiveItem(apiFormData);
+        const newItem = await createArchiveItem(formData);
         setItems(prevItems => [newItem, ...prevItems]);
         toast({ title: "Success", description: "Item added to your archive." });
       }
 
-      if (formData.category && !persistedCategories.includes(formData.category)) {
-        setPersistedCategories(prev => [...prev, formData.category!].sort());
+      const category = formData.get('category') as string;
+      if (category && !persistedCategories.includes(category)) {
+        setPersistedCategories(prev => [...prev, category].sort());
       }
       handleCloseDialog();
     } catch (error) {

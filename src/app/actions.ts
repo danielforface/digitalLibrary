@@ -49,6 +49,29 @@ async function writeData(data: ArchiveItem[]): Promise<void> {
   await fs.writeFile(jsonPath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
+// Helper function to save a file and return its URL
+async function saveFile(file: File): Promise<string> {
+    await fs.mkdir(uploadsPath, { recursive: true });
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filename = `${uniqueSuffix}-${sanitizedName}`;
+    await fs.writeFile(path.join(uploadsPath, filename), fileBuffer);
+    return `/uploads/${filename}`;
+}
+
+// Helper function to delete a file
+async function deleteFile(url: string | undefined): Promise<void> {
+    if (url && url.startsWith('/uploads/')) {
+        try {
+            await fs.unlink(path.join(process.cwd(), 'public', url));
+        } catch (err) {
+            console.error(`Failed to delete file: ${url}`, err);
+        }
+    }
+}
+
+
 // New functions for categories persistence
 async function readCategories(): Promise<string[]> {
   try {
@@ -134,6 +157,7 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
     const tagsString = formData.get('tags') as string;
     const content = formData.get('content') as string | undefined;
     const file = formData.get('file') as File | null;
+    const coverImage = formData.get('coverImage') as File | null;
     
     if (!title || !category || !description || !type) {
         throw new Error("Missing required fields: title, category, description, type.");
@@ -148,15 +172,13 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
     const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
     let itemUrl: string | undefined = undefined;
-
     if (file && file.size > 0) {
-      await fs.mkdir(uploadsPath, { recursive: true });
-      const fileBuffer = Buffer.from(await file.arrayBuffer());
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const filename = `${uniqueSuffix}-${sanitizedName}`;
-      await fs.writeFile(path.join(uploadsPath, filename), fileBuffer);
-      itemUrl = `/uploads/${filename}`;
+      itemUrl = await saveFile(file);
+    }
+    
+    let coverImageUrl: string | undefined = undefined;
+    if (coverImage && coverImage.size > 0) {
+        coverImageUrl = await saveFile(coverImage);
     }
 
     const newItem: ArchiveItem = {
@@ -168,6 +190,7 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
       tags,
       content: content || '',
       url: itemUrl,
+      coverImageUrl,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -206,6 +229,8 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
         const tagsString = formData.get('tags') as string;
         const content = formData.get('content') as string | undefined;
         const file = formData.get('file') as File | null;
+        const coverImage = formData.get('coverImage') as File | null;
+        const removeCoverImage = formData.get('removeCoverImage') === 'true';
 
         if (type === 'text' && content) {
             const processed = await remark().use(strip).process(content);
@@ -216,23 +241,18 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
         const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
         
         let itemUrl = currentItem.url;
-
         if (file && file.size > 0) {
-            if (currentItem.url && currentItem.url.startsWith('/uploads/')) {
-                try {
-                    await fs.unlink(path.join(process.cwd(), 'public', currentItem.url));
-                } catch (err) {
-                    console.error(`Failed to delete old file: ${currentItem.url}`, err);
-                }
-            }
-            
-            await fs.mkdir(uploadsPath, { recursive: true });
-            const fileBuffer = Buffer.from(await file.arrayBuffer());
-            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-            const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-            const filename = `${uniqueSuffix}-${sanitizedName}`;
-            await fs.writeFile(path.join(uploadsPath, filename), fileBuffer);
-            itemUrl = `/uploads/${filename}`;
+            await deleteFile(currentItem.url);
+            itemUrl = await saveFile(file);
+        }
+
+        let coverImageUrl = currentItem.coverImageUrl;
+        if (removeCoverImage) {
+            await deleteFile(currentItem.coverImageUrl);
+            coverImageUrl = undefined;
+        } else if (coverImage && coverImage.size > 0) {
+            await deleteFile(currentItem.coverImageUrl);
+            coverImageUrl = await saveFile(coverImage);
         }
 
         const updatedItem: ArchiveItem = {
@@ -244,6 +264,7 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
             tags,
             content: content !== undefined ? content : currentItem.content,
             url: itemUrl,
+            coverImageUrl: coverImageUrl,
             updatedAt: new Date().toISOString(),
         };
 
@@ -275,15 +296,9 @@ export async function deleteArchiveItem(id: string): Promise<void> {
         }
 
         const itemToDelete = data[itemIndex];
-
-        if (itemToDelete.url && itemToDelete.url.startsWith('/uploads/')) {
-            try {
-                const filePath = path.join(process.cwd(), 'public', itemToDelete.url);
-                await fs.unlink(filePath);
-            } catch (error) {
-                console.error(`Failed to delete file: ${itemToDelete.url}`, error);
-            }
-        }
+        
+        await deleteFile(itemToDelete.url);
+        await deleteFile(itemToDelete.coverImageUrl);
 
         data.splice(itemIndex, 1);
         await writeData(data);
@@ -339,7 +354,7 @@ export async function handleCategoryAction(
         const idsToDelete = new Set(itemsToProcess.map(item => item.id));
         
         const filesToDelete = itemsToProcess
-            .map(item => item.url)
+            .flatMap(item => [item.url, item.coverImageUrl])
             .filter((url): url is string => !!url && url.startsWith('/uploads/'));
         
         const remainingData = data.filter(item => !idsToDelete.has(item.id));
@@ -352,11 +367,7 @@ export async function handleCategoryAction(
         await writeCategories(remainingCatPaths);
 
         for (const url of filesToDelete) {
-            try {
-                await fs.unlink(path.join(process.cwd(), 'public', url));
-            } catch (err) {
-                console.error(`Failed to delete file: ${url}`, err);
-            }
+            await deleteFile(url);
         }
     }
     

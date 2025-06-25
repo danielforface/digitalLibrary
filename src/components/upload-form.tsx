@@ -18,11 +18,21 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { ArchiveItem } from "@/lib/types"
 
 const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+const fileSchema = z.any()
+    .optional()
+    .refine((value) => {
+        if (value instanceof FileList && value.length > 0) {
+            return value[0].size <= MAX_FILE_SIZE_BYTES;
+        }
+        return true;
+    }, `File size must be less than ${MAX_FILE_SIZE_MB}MB.`);
 
 const formSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters."),
@@ -30,15 +40,10 @@ const formSchema = z.object({
   description: z.string().min(1, "Description is required."),
   type: z.enum(["text", "image", "audio", "video", "pdf", "word"]),
   content: z.string().optional(),
-  file: z.any()
-    .optional()
-    .refine((value) => {
-        if (value instanceof FileList && value.length > 0) {
-            return value[0].size <= MAX_FILE_SIZE_BYTES;
-        }
-        return true;
-    }, `File size must be less than ${MAX_FILE_SIZE_MB}MB.`),
+  file: fileSchema,
   tags: z.string().optional(),
+  coverImage: fileSchema,
+  removeCoverImage: z.boolean().default(false).optional(),
 });
 
 export type UploadFormData = z.infer<typeof formSchema>;
@@ -62,12 +67,17 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
       content: itemToEdit?.content || "",
       file: undefined,
       tags: itemToEdit?.tags?.join(', ') || "",
+      coverImage: undefined,
+      removeCoverImage: false,
     },
   });
 
   const selectedType = form.watch("type");
+  const removeCoverImage = form.watch("removeCoverImage");
 
-  const getAcceptAttribute = () => {
+  const getAcceptAttribute = (type: 'main' | 'cover') => {
+    if (type === 'cover') return 'image/*';
+
     switch (selectedType) {
       case 'image':
         return 'image/*';
@@ -83,10 +93,29 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
         return '';
     }
   };
+  
+  const handleFinalSubmit = (data: UploadFormData) => {
+    const apiFormData = new FormData();
+
+    // Loop through form data and append to FormData object
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'file' || key === 'coverImage') {
+        if (value instanceof FileList && value.length > 0) {
+          apiFormData.append(key, value[0]);
+        }
+      } else if (key === 'removeCoverImage') {
+         if (value) apiFormData.append(key, 'true');
+      } else if (value !== undefined && value !== null) {
+        apiFormData.append(key, String(value));
+      }
+    });
+    onSubmit(apiFormData as any);
+  }
+
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 mt-4">
+      <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-8 mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField
             control={form.control}
@@ -196,11 +225,11 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             name="file"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>File</FormLabel>
+                <FormLabel>Main File</FormLabel>
                 <FormControl>
                   <Input 
                     type="file"
-                    accept={getAcceptAttribute()}
+                    accept={getAcceptAttribute('main')}
                     onChange={(e) => field.onChange(e.target.files)}
                   />
                 </FormControl>
@@ -212,6 +241,50 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             )}
           />
         )}
+
+        <div className="md:col-span-2 space-y-4 rounded-lg border p-4">
+            <h3 className="text-lg font-medium">Cover Photo</h3>
+            {itemToEdit?.coverImageUrl && (
+                <FormField
+                    control={form.control}
+                    name="removeCoverImage"
+                    render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                        <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                        />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                            Remove current cover photo
+                        </FormLabel>
+                    </FormItem>
+                    )}
+                />
+            )}
+            <FormField
+                control={form.control}
+                name="coverImage"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Upload Photo</FormLabel>
+                    <FormControl>
+                    <Input 
+                        type="file"
+                        accept={getAcceptAttribute('cover')}
+                        onChange={(e) => field.onChange(e.target.files)}
+                        disabled={removeCoverImage}
+                    />
+                    </FormControl>
+                    <FormDescription>
+                    {itemToEdit?.coverImageUrl ? "Upload a new photo to replace the current one." : "Upload an optional cover photo."}
+                    </FormDescription>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        </div>
 
         <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={onDone} disabled={isSubmitting}>Cancel</Button>

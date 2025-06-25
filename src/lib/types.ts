@@ -11,6 +11,7 @@ export type ArchiveItem = {
   content?: string;
   url?: string;
   tags?: string[];
+  coverImageUrl?: string;
 };
 
 export type CategoryNode = {
