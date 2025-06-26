@@ -68,11 +68,16 @@ type DialogState = {
   item?: ArchiveItem;
 };
 
-export default function DigitalArchiveApp() {
+type DigitalArchiveAppProps = {
+  initialItems: ArchiveItem[];
+  initialCategories: string[];
+  initialIsAuthenticated: boolean;
+}
+
+export default function DigitalArchiveApp({ initialItems, initialCategories, initialIsAuthenticated }: DigitalArchiveAppProps) {
   const { t, dir } = useLanguage();
-  const [items, setItems] = useState<ArchiveItem[]>([]);
-  const [persistedCategories, setPersistedCategories] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<ArchiveItem[]>(initialItems);
+  const [persistedCategories, setPersistedCategories] = useState<string[]>(initialCategories);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -83,37 +88,11 @@ export default function DigitalArchiveApp() {
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ArchiveItem | null>(null);
   const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(initialIsAuthenticated);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void | Promise<void>) | null>(null);
 
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        setIsLoading(true);
-        const [itemData, categoryData, authStatus] = await Promise.all([
-          getArchiveItems(),
-          getCategoryPaths(),
-          checkAuth(),
-        ]);
-        setItems(itemData);
-        setPersistedCategories(categoryData);
-        setIsAuthenticated(authStatus.isAuthenticated);
-      } catch (error) {
-        console.error(error);
-        toast({
-          variant: 'destructive',
-          title: t('error'),
-          description: 'Could not load archive data.',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAllData();
-  }, [toast, t]);
 
   const handleProtectedAction = useCallback((action: () => void | Promise<void>) => {
     if (isAuthenticated) {
