@@ -369,7 +369,7 @@ export default function DigitalArchiveApp() {
   }
 
   return (
-    <div className={cn("flex h-screen bg-background", dir === 'rtl' ? 'flex-row-reverse' : '')}>
+    <div className={cn("flex h-screen bg-background")}>
       <AppSidebar
         className="hidden md:flex"
         categoryTree={categoryTree}
