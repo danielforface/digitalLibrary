@@ -15,42 +15,37 @@ type LanguageContextType = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations: { [key in Language]?: any } = {};
+// Statically import translations to avoid async logic issues on initial load
+import enTranslations from '@/data/locales/en.json';
+import heTranslations from '@/data/locales/he.json';
+
+const translations = {
+  en: enTranslations,
+  he: heTranslations,
+};
+
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Language>('en'); // Default to 'en'
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [lang, setLang] = useState<Language>('en'); // Default to 'en' for server render
 
+  // This effect runs only on the client, after initial render
   useEffect(() => {
     const savedLang = localStorage.getItem('lang') as Language | null;
-    const initialLang = savedLang || 'en';
-    setLang(initialLang);
+    if (savedLang && (savedLang === 'en' || savedLang === 'he')) {
+      setLang(savedLang);
+    }
   }, []);
 
+  // This effect synchronizes the lang state with the DOM and localStorage on the client
   useEffect(() => {
-    if (translations[lang]) {
-      setIsLoaded(true);
-      document.documentElement.lang = lang;
-      document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
-      localStorage.setItem('lang', lang);
-    } else {
-      setIsLoaded(false);
-      import(`@/data/locales/${lang}.json`)
-        .then((module) => {
-          translations[lang] = module.default;
-          setIsLoaded(true);
-          document.documentElement.lang = lang;
-          document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
-          localStorage.setItem('lang', lang);
-        })
-        .catch(console.error);
-    }
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+    localStorage.setItem('lang', lang);
   }, [lang]);
   
   const t = useCallback((key: string, replacements?: { [key: string]: string | number }) => {
-    if (!isLoaded || !translations[lang]) return key;
-    
-    let text = translations[lang][key] || key;
+    const dictionary = translations[lang] || translations.en;
+    let text = (dictionary as any)[key] || key;
 
     if (replacements) {
       Object.entries(replacements).forEach(([rKey, value]) => {
@@ -59,7 +54,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
     
     return text;
-  }, [lang, isLoaded]);
+  }, [lang]);
   
   const value = {
     lang,
@@ -68,10 +63,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLang,
   };
 
-  if (!isLoaded) {
-    return null; // or a loading spinner
-  }
-
+  // Always render children, even on the server.
+  // The server will render with 'en'. The client will re-render if localStorage has 'he'.
+  // `suppressHydrationWarning` on the <html> tag in RootLayout handles this.
   return (
     <LanguageContext.Provider value={value}>
       {children}
