@@ -30,7 +30,10 @@ export default function ItemDialog({ dialogState, onClose, onSubmit, allCategori
   const { t } = useLanguage();
   const { open, mode, item } = dialogState;
 
-  const isWordDocument = mode === 'view' && item?.type === 'word';
+  const isViewMode = mode === 'view' && item;
+  const isTextDocument = isViewMode && item.type === 'text';
+  const isWordDocument = isViewMode && item.type === 'word';
+  const isFullHeightDocument = isTextDocument || isWordDocument;
   
   const title = mode === 'new' 
     ? t('upload_content_title') 
@@ -48,15 +51,15 @@ export default function ItemDialog({ dialogState, onClose, onSubmit, allCategori
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={cn(
         "w-[95vw] max-w-sm sm:max-w-xl md:max-w-3xl max-h-[90dvh]",
-        isWordDocument ? 'flex flex-col' : 'overflow-y-auto',
-        isWordDocument && "md:max-w-4xl lg:max-w-6xl"
+        isFullHeightDocument ? 'flex flex-col' : 'overflow-y-auto',
+        isFullHeightDocument && "md:max-w-4xl lg:max-w-6xl"
       )}>
-        <DialogHeader className={cn(isWordDocument && "flex-shrink-0")}>
+        <DialogHeader className={cn(isFullHeightDocument && "flex-shrink-0")}>
           <DialogTitle className="font-headline text-2xl">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {mode === 'view' && item ? (
-           <div className={cn(isWordDocument && 'flex-grow min-h-0')}>
+           <div className={cn(isFullHeightDocument && 'flex-grow min-h-0')}>
             <ItemViewer item={item} />
           </div>
         ) : (

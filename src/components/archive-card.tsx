@@ -82,7 +82,7 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                 </CardHeader>
                 <CardContent className="flex-grow">
                 {item.type === 'text' && (
-                    <p className={cn("text-sm line-clamp-3", item.coverImageUrl ? "text-neutral-300" : "text-muted-foreground")}>
+                    <p className={cn("text-sm line-clamp-3 whitespace-pre-wrap", item.coverImageUrl ? "text-neutral-300" : "text-muted-foreground")}>
                     {item.content}
                     </p>
                 )}
@@ -127,11 +127,9 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                     )}
                     <DropdownMenuSeparator />
                       <DropdownMenuItem 
-                        onSelect={() => {
-                          // Let the dropdown close, then open the dialog to prevent focus conflicts.
-                          setTimeout(() => {
-                            onDeleteRequest();
-                          }, 50);
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          onDeleteRequest();
                         }}
                         className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
                       >

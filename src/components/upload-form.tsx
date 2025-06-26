@@ -4,7 +4,8 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2 } from "lucide-react";
+import { Loader2, Bold, Italic, Link, List, Quote, Code, Strikethrough } from "lucide-react";
+import React from "react";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -59,6 +60,7 @@ type UploadFormProps = {
 
 export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone, isSubmitting }: UploadFormProps) {
   const { t } = useLanguage();
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   
   const form = useForm<UploadFormData>({
     resolver: zodResolver(formSchema),
@@ -113,8 +115,79 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
       }
     });
     onSubmit(apiFormData as any);
-  }
+  };
 
+  const applyMarkdownFormatting = (prefix: string, suffix: string = prefix) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const newText = `${prefix}${selectedText}${suffix}`;
+    
+    const updatedValue = 
+        textarea.value.substring(0, start) + 
+        newText + 
+        textarea.value.substring(end);
+
+    form.setValue("content", updatedValue, { shouldValidate: true, shouldDirty: true });
+
+    setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
+  };
+
+  const handleLinkClick = () => {
+    const url = window.prompt("Enter the URL:");
+    if (!url) return;
+
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end) || 'link text';
+    const newText = `[${selectedText}](${url})`;
+    
+    const updatedValue = 
+        textarea.value.substring(0, start) + 
+        newText + 
+        textarea.value.substring(end);
+
+    form.setValue("content", updatedValue, { shouldValidate: true, shouldDirty: true });
+
+    setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + 1, start + 1 + selectedText.length);
+    }, 0);
+  };
+
+  const handleListClick = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    const listItems = selectedText
+      .split('\n')
+      .map(line => `* ${line}`)
+      .join('\n');
+    
+    const updatedValue = 
+        textarea.value.substring(0, start) + 
+        listItems + 
+        textarea.value.substring(end);
+
+    form.setValue("content", updatedValue, { shouldValidate: true, shouldDirty: true });
+     setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start, start + listItems.length);
+    }, 0);
+  };
 
   return (
     <Form {...form}>
@@ -210,9 +283,28 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('form_content')}</FormLabel>
-                <FormControl>
-                  <Textarea placeholder={t('form_content_placeholder')} {...field} className="min-h-[150px]" />
-                </FormControl>
+                 <div className="rounded-md border border-input">
+                    <div className="flex items-center gap-1 border-b border-input p-1 bg-transparent flex-wrap">
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Bold" onClick={() => applyMarkdownFormatting('**')}> <Bold size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Italic" onClick={() => applyMarkdownFormatting('_')}> <Italic size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Strikethrough" onClick={() => applyMarkdownFormatting('~~')}> <Strikethrough size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Link" onClick={handleLinkClick}> <Link size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Blockquote" onClick={() => applyMarkdownFormatting('\n> ', '')}> <Quote size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Code" onClick={() => applyMarkdownFormatting('`')}> <Code size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Bulleted List" onClick={handleListClick}> <List size={16}/> </Button>
+                    </div>
+                    <FormControl>
+                    <Textarea
+                        placeholder={t('form_content_placeholder')}
+                        {...field}
+                        ref={el => {
+                            field.ref(el);
+                            (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el;
+                        }}
+                        className="min-h-[150px] border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                    </FormControl>
+                </div>
                 <FormDescription>
                   {t('form_content_desc')}
                 </FormDescription>
