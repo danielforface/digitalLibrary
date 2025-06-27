@@ -27,6 +27,9 @@ import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/context/language-context';
 import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 type ArchiveCardProps = {
   item: ArchiveItem;
@@ -48,6 +51,12 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
       setDateLocale(enUS);
     }
   }, [lang]);
+
+  const handleDeleteRequest = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDeleteRequest();
+  };
 
   return (
     <Card className="relative group overflow-hidden flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
@@ -81,10 +90,18 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                     </div>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                {item.type === 'text' && (
-                    <p className={cn("text-sm line-clamp-3 whitespace-pre-wrap", item.coverImageUrl ? "text-neutral-300" : "text-muted-foreground")}>
-                    {item.content}
-                    </p>
+                {item.type === 'text' && item.content && (
+                  <div className={cn(
+                      "prose prose-sm dark:prose-invert max-w-none line-clamp-3 text-left",
+                      "prose-p:my-0 prose-headings:my-1", // Compact spacing for preview
+                      item.coverImageUrl 
+                          ? "prose-p:text-neutral-300 prose-strong:text-white"
+                          : "prose-p:text-muted-foreground"
+                  )}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                          {item.content}
+                      </ReactMarkdown>
+                  </div>
                 )}
                 {item.tags && item.tags.length > 0 && (
                     <div className={cn("mt-4 flex flex-wrap gap-2", dir === 'rtl' && 'justify-end')}>
@@ -127,10 +144,7 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                     )}
                     <DropdownMenuSeparator />
                       <DropdownMenuItem 
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          onDeleteRequest();
-                        }}
+                        onSelect={handleDeleteRequest}
                         className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
                       >
                         <Trash2 className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
