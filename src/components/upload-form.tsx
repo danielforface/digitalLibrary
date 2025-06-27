@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2, Bold, Italic, Link, List, Quote, Code, Strikethrough } from "lucide-react";
+import { Loader2, Bold, Italic, Link, List, Quote, Code, Strikethrough, AlignLeft, AlignCenter, AlignRight, ZoomIn, ZoomOut } from "lucide-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator";
 import type { ArchiveItem } from "@/lib/types"
 import { useLanguage } from "@/context/language-context";
 
@@ -117,9 +118,9 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
     onSubmit(apiFormData as any);
   };
 
-  const applyMarkdownFormatting = (prefix: string, suffix: string = prefix) => {
+  const applyInlineFormatting = (prefix: string, suffix: string = prefix) => {
     const textarea = textareaRef.current;
-    if (!textarea) return;
+    if (!textarea || textarea.selectionStart === textarea.selectionEnd) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
@@ -138,6 +139,36 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
         textarea.setSelectionRange(start + prefix.length, end + prefix.length);
     }, 0);
   };
+  
+  const applyBlockFormatting = (className: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const value = textarea.value;
+    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    let lineEnd = value.indexOf('\n', start);
+    if (lineEnd === -1) {
+        lineEnd = value.length;
+    }
+
+    let lineText = value.substring(lineStart, lineEnd);
+    
+    const newText = `<div class="${className}">${lineText}</div>`;
+    
+    const updatedValue = 
+        value.substring(0, lineStart) + 
+        newText + 
+        value.substring(lineEnd);
+
+    form.setValue("content", updatedValue, { shouldValidate: true, shouldDirty: true });
+
+    setTimeout(() => {
+        textarea.focus();
+        const newPos = start + `<div class="${className}">`.length;
+        textarea.setSelectionRange(newPos, newPos);
+    }, 0);
+  }
 
   const handleLinkClick = () => {
     const url = window.prompt("Enter the URL:");
@@ -285,13 +316,20 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                 <FormLabel>{t('form_content')}</FormLabel>
                  <div className="rounded-md border border-input">
                     <div className="flex items-center gap-1 border-b border-input p-1 bg-transparent flex-wrap">
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Bold" onClick={() => applyMarkdownFormatting('**')}> <Bold size={16}/> </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Italic" onClick={() => applyMarkdownFormatting('_')}> <Italic size={16}/> </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Strikethrough" onClick={() => applyMarkdownFormatting('~~')}> <Strikethrough size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Bold" onClick={() => applyInlineFormatting('**')}> <Bold size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Italic" onClick={() => applyInlineFormatting('_')}> <Italic size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Strikethrough" onClick={() => applyInlineFormatting('~~')}> <Strikethrough size={16}/> </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Link" onClick={handleLinkClick}> <Link size={16}/> </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Blockquote" onClick={() => applyMarkdownFormatting('\n> ', '')}> <Quote size={16}/> </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Code" onClick={() => applyMarkdownFormatting('`')}> <Code size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Blockquote" onClick={() => applyInlineFormatting('\n> ', '')}> <Quote size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Code" onClick={() => applyInlineFormatting('`')}> <Code size={16}/> </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Bulleted List" onClick={handleListClick}> <List size={16}/> </Button>
+                        <Separator orientation="vertical" className="h-5 mx-1" />
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Left" onClick={() => applyBlockFormatting('text-left')}> <AlignLeft size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Center" onClick={() => applyBlockFormatting('text-center')}> <AlignCenter size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Right" onClick={() => applyBlockFormatting('text-right')}> <AlignRight size={16}/> </Button>
+                         <Separator orientation="vertical" className="h-5 mx-1" />
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Increase Font Size" onClick={() => applyInlineFormatting('<big>', '</big>')}> <ZoomIn size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Decrease Font Size" onClick={() => applyInlineFormatting('<small>', '</small>')}> <ZoomOut size={16}/> </Button>
                     </div>
                     <FormControl>
                     <Textarea

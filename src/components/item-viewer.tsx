@@ -10,6 +10,7 @@ import { Download } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import rehypeRaw from 'rehype-raw';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 
@@ -45,7 +46,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
       case 'text':
         return (
           <div className="prose dark:prose-invert max-w-none h-full overflow-y-auto">
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeRaw]}>
               {item.content || ''}
             </ReactMarkdown>
           </div>

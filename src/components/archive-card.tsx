@@ -30,6 +30,7 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import rehypeRaw from 'rehype-raw';
 
 type ArchiveCardProps = {
   item: ArchiveItem;
@@ -98,7 +99,7 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                           ? "prose-p:text-neutral-300 prose-strong:text-white"
                           : "prose-p:text-muted-foreground"
                   )}>
-                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeRaw]}>
                           {item.content}
                       </ReactMarkdown>
                   </div>
