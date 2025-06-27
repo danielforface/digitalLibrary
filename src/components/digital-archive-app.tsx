@@ -21,26 +21,25 @@ import { cn } from '@/lib/utils';
 
 function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
-  const allPaths = [...new Set([...items.map(i => i.category), ...persistedPaths])].filter(Boolean);
-  
+  const allCategoryPaths = [...new Set([...items.map(i => i.category), ...persistedPaths])].filter(Boolean);
   const nodes: Record<string, CategoryNode> = { '': root };
 
-  allPaths.sort().forEach(path => {
-    path.split('/').reduce((parentPath, part) => {
-      const currentPath = parentPath ? `${parentPath}/${part}` : part;
+  // Ensure all nodes and their parent nodes exist by iterating through each path segment
+  allCategoryPaths.forEach(path => {
+    let currentPath = '';
+    path.split('/').forEach(part => {
+      const parentPath = currentPath;
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      
       if (!nodes[currentPath]) {
         nodes[currentPath] = { name: part, path: currentPath, children: [], itemCount: 0 };
-        
-        // Ensure parent nodes are created
-        const parentParts = currentPath.split('/');
-        parentParts.pop();
-        const immediateParentPath = parentParts.join('/');
-        if (nodes[immediateParentPath] && !nodes[immediateParentPath].children.some(child => child.path === currentPath)) {
-            nodes[immediateParentPath].children.push(nodes[currentPath]);
+        const parentNode = nodes[parentPath];
+        // Link to parent if it exists and isn't already linked
+        if (parentNode && !parentNode.children.some(child => child.path === currentPath)) {
+            parentNode.children.push(nodes[currentPath]);
         }
       }
-      return currentPath;
-    }, '');
+    });
   });
 
   // Count items for each category directly
@@ -50,14 +49,19 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
     }
   });
 
-  // Sum counts up the tree
+  // Sum counts up the tree, starting from the children of root
   function sumCounts(node: CategoryNode): number {
     const childCounts = node.children.reduce((sum, child) => sum + sumCounts(child), 0);
     node.itemCount += childCounts;
     return node.itemCount;
   }
-
   sumCounts(root);
+  
+  // Sort children of all nodes alphabetically by name
+  Object.values(nodes).forEach(node => {
+    node.children.sort((a, b) => a.name.localeCompare(b.name));
+  });
+  
   return root;
 }
 
