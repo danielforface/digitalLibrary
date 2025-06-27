@@ -68,7 +68,10 @@ export default function CategoryTreeItem({
           dir === 'rtl' && 'flex-row-reverse',
           selectedCategory === node.path ? 'bg-primary/20' : 'hover:bg-primary/10'
         )}
-        style={{ paddingInlineStart: `${level * 0.75}rem` }}
+        style={dir === 'rtl' 
+            ? { paddingRight: `${level * 1.25}rem` } 
+            : { paddingLeft: `${level * 1.25}rem` }
+        }
       >
         {hasChildren ? (
           <button
