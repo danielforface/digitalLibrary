@@ -39,9 +39,10 @@ type ArchiveCardProps = {
   onMove: () => void;
   onDeleteRequest: () => void;
   isAuthenticated: boolean;
+  isPriority?: boolean;
 };
 
-export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequest, isAuthenticated }: ArchiveCardProps) {
+export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequest, isAuthenticated, isPriority = false }: ArchiveCardProps) {
   const { t, lang, dir } = useLanguage();
   const [dateLocale, setDateLocale] = useState(enUS);
 
@@ -67,6 +68,8 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                   src={item.coverImageUrl}
                   alt={`${item.title} cover photo`}
                   fill
+                  priority={isPriority}
+                  sizes="(min-width: 1536px) 20vw, (min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover transition-all duration-300 group-hover:scale-105"
                   data-ai-hint="background pattern"
               />

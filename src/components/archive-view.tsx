@@ -90,7 +90,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
       
       {items.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <ArchiveCard
               key={item.id}
               item={item}
@@ -99,6 +99,7 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
               onMove={() => onMove(item)}
               onDeleteRequest={() => onDeleteRequest(item)}
               isAuthenticated={isAuthenticated}
+              isPriority={index < 5}
             />
           ))}
         </div>
