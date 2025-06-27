@@ -32,7 +32,15 @@ export async function logout(): Promise<void> {
 }
 
 export async function checkAuth(): Promise<{ isAuthenticated: boolean }> {
-  const authCookie = cookies().get(AUTH_COOKIE_NAME);
-  const isAuthenticated = authCookie?.value === 'true';
-  return { isAuthenticated };
+  try {
+    const cookieStore = cookies();
+    const authCookie = cookieStore.get(AUTH_COOKIE_NAME);
+    const isAuthenticated = authCookie?.value === 'true';
+    return { isAuthenticated };
+  } catch (error) {
+    console.error("Could not access cookies. User will be treated as logged out.", error);
+    // In environments where cookies are not available (e.g. during build),
+    // treat the user as not authenticated.
+    return { isAuthenticated: false };
+  }
 }
