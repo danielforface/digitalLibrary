@@ -45,7 +45,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
     switch (item.type) {
       case 'text':
         return (
-          <div className="prose dark:prose-invert max-w-none h-full overflow-y-auto">
+          <div className="prose dark:prose-invert max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeRaw]}>
               {item.content || ''}
             </ReactMarkdown>
@@ -95,7 +95,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
 
   return (
     <div className="py-4 space-y-4 h-full flex flex-col">
-      <div className="flex-grow min-h-0">
+      <div className="flex-grow min-h-0 overflow-y-auto">
         {renderContent()}
       </div>
       {showDownloadButton && item.url && (
