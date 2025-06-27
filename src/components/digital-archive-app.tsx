@@ -21,10 +21,16 @@ import { cn } from '@/lib/utils';
 
 function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
-  const allCategoryPaths = [...new Set([...items.map(i => i.category), ...persistedPaths])].filter(Boolean);
+  
+  // Sort paths to ensure parents are processed before children, making the tree build deterministic
+  const allCategoryPaths = [...new Set([...items.map(i => i.category), ...persistedPaths])]
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
+
   const nodes: Record<string, CategoryNode> = { '': root };
 
-  // Ensure all nodes and their parent nodes exist by iterating through each path segment
+  // This approach is more robust because sorting ensures parent paths (e.g., "A")
+  // are processed before child paths (e.g., "A/B").
   allCategoryPaths.forEach(path => {
     let currentPath = '';
     path.split('/').forEach(part => {
@@ -33,8 +39,7 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
       
       if (!nodes[currentPath]) {
         nodes[currentPath] = { name: part, path: currentPath, children: [], itemCount: 0 };
-        const parentNode = nodes[parentPath];
-        // Link to parent if it exists and isn't already linked
+        const parentNode = nodes[parentPath]; // Parent is guaranteed to exist due to sorting
         if (parentNode && !parentNode.children.some(child => child.path === currentPath)) {
             parentNode.children.push(nodes[currentPath]);
         }
