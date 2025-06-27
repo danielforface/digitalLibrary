@@ -33,18 +33,22 @@ async function readData(): Promise<ArchiveItem[]> {
     if (fileContent.trim() === '') {
       return [];
     }
-    return JSON.parse(fileContent);
+    const data = JSON.parse(fileContent);
+    if (!Array.isArray(data)) {
+        console.error(`Data in ${jsonPath} is not an array. Returning empty array.`);
+        return [];
+    }
+    return data;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       try {
-        await writeData([]); // Attempt to create the file if it doesn't exist
+        await writeData([]);
       } catch (writeError) {
-        console.error("Failed to create new archive data file:", writeError);
+        console.error(`Failed to create new archive data file at ${jsonPath}:`, writeError);
       }
-      return []; // Return empty array if file doesn't exist
+      return [];
     }
-    // For any other error (parsing, permissions), log it and return empty
-    console.error("Error reading archive data:", error);
+    console.error(`Error reading or parsing archive data from ${jsonPath}:`, error);
     return [];
   }
 }
@@ -84,17 +88,22 @@ async function readCategories(): Promise<string[]> {
     if (fileContent.trim() === '') {
       return [];
     }
-    return JSON.parse(fileContent);
+    const data = JSON.parse(fileContent);
+    if (!Array.isArray(data)) {
+        console.error(`Data in ${categoriesJsonPath} is not an array. Returning empty array.`);
+        return [];
+    }
+    return data;
   } catch (error) {
      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       try {
         await writeCategories([]);
       } catch (writeError) {
-        console.error("Could not create categories data file:", writeError);
+        console.error(`Could not create categories data file at ${categoriesJsonPath}:`, writeError);
       }
       return [];
     }
-    console.error("Error reading categories data:", error);
+    console.error(`Error reading or parsing categories data from ${categoriesJsonPath}:`, error);
     return [];
   }
 }
