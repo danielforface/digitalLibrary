@@ -168,8 +168,8 @@ export async function createArchiveItem(formData: FormData): Promise<ArchiveItem
     const file = formData.get('file') as File | null;
     const coverImage = formData.get('coverImage') as File | null;
     
-    if (!title || !category || !description || !type) {
-        throw new Error("Missing required fields: title, category, description, type.");
+    if (!title || !category || !type) {
+        throw new Error("Missing required fields: title, category, type.");
     }
     
     const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()).filter(Boolean) : [];
@@ -254,10 +254,10 @@ export async function updateArchiveItem(id: string, formData: FormData): Promise
 
         const updatedItem: ArchiveItem = {
             ...currentItem,
-            title: title || currentItem.title,
-            category: category || currentItem.category,
-            description: description || currentItem.description,
-            type: type || currentItem.type,
+            title: title ?? currentItem.title,
+            category: category ?? currentItem.category,
+            description: description ?? currentItem.description,
+            type: type ?? currentItem.type,
             tags,
             content: content !== undefined ? content : currentItem.content,
             url: itemUrl,
