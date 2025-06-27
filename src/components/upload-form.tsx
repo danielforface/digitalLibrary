@@ -324,9 +324,9 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Code" onClick={() => applyInlineFormatting('`')}> <Code size={16}/> </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Bulleted List" onClick={handleListClick}> <List size={16}/> </Button>
                         <Separator orientation="vertical" className="h-5 mx-1" />
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Left" onClick={() => applyBlockFormatting('text-left')}> <AlignLeft size={16}/> </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Center" onClick={() => applyBlockFormatting('text-center')}> <AlignCenter size={16}/> </Button>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Right" onClick={() => applyBlockFormatting('text-right')}> <AlignRight size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Left" onClick={() => applyBlockFormatting('align-left')}> <AlignLeft size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Center" onClick={() => applyBlockFormatting('align-center')}> <AlignCenter size={16}/> </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Align Right" onClick={() => applyBlockFormatting('align-right')}> <AlignRight size={16}/> </Button>
                          <Separator orientation="vertical" className="h-5 mx-1" />
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Increase Font Size" onClick={() => applyInlineFormatting('<big>', '</big>')}> <ZoomIn size={16}/> </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Decrease Font Size" onClick={() => applyInlineFormatting('<small>', '</small>')}> <ZoomOut size={16}/> </Button>

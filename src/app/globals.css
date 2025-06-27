@@ -113,9 +113,9 @@ html[lang="he"] body {
   .prose hr {
     @apply border-border my-6;
   }
-  .prose .text-left { text-align: left; }
-  .prose .text-center { text-align: center; }
-  .prose .text-right { text-align: right; }
+  .prose .align-left { text-align: left; }
+  .prose .align-center { text-align: center; }
+  .prose .align-right { text-align: right; }
   .prose table {
     @apply w-full my-6;
   }
