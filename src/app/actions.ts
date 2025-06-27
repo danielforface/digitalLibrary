@@ -36,11 +36,16 @@ async function readData(): Promise<ArchiveItem[]> {
     return JSON.parse(fileContent);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      await writeData([]); // Create the file if it doesn't exist
-      return [];
+      try {
+        await writeData([]); // Attempt to create the file if it doesn't exist
+      } catch (writeError) {
+        console.error("Failed to create new archive data file:", writeError);
+      }
+      return []; // Return empty array if file doesn't exist
     }
-    console.error("Error reading data:", error);
-    throw new Error('Failed to read archive data.');
+    // For any other error (parsing, permissions), log it and return empty
+    console.error("Error reading archive data:", error);
+    return [];
   }
 }
 
@@ -75,17 +80,22 @@ async function deleteFile(url: string | undefined): Promise<void> {
 // New functions for categories persistence
 async function readCategories(): Promise<string[]> {
   try {
-    // Ensure the file exists before reading
-    await fs.access(categoriesJsonPath).catch(async () => {
-        await ensureDataDirectory();
-        await fs.writeFile(categoriesJsonPath, JSON.stringify([], null, 2), 'utf-8');
-    });
     const fileContent = await fs.readFile(categoriesJsonPath, 'utf-8');
-    if (fileContent.trim() === '') return [];
+    if (fileContent.trim() === '') {
+      return [];
+    }
     return JSON.parse(fileContent);
   } catch (error) {
-    console.error("Error reading categories:", error);
-    throw new Error('Failed to read category data.');
+     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      try {
+        await writeCategories([]);
+      } catch (writeError) {
+        console.error("Could not create categories data file:", writeError);
+      }
+      return [];
+    }
+    console.error("Error reading categories data:", error);
+    return [];
   }
 }
 
@@ -96,12 +106,8 @@ async function writeCategories(paths: string[]): Promise<void> {
 }
 
 export async function getCategoryPaths(): Promise<string[]> {
-    try {
-        return await readCategories();
-    } catch (error) {
-        console.error("[ACTION_GET_CATEGORIES]", error);
-        return [];
-    }
+    // This function is now safe because readCategories will not throw
+    return readCategories();
 }
 
 export async function addCategoryPath(newPath: string): Promise<void> {
@@ -137,12 +143,8 @@ export async function deleteEmptyCategory(pathToDelete: string): Promise<void> {
 }
 
 export async function getArchiveItems(): Promise<ArchiveItem[]> {
-    try {
-        return await readData();
-    } catch (error) {
-        console.error("[ACTION_GET_ITEMS]", error);
-        return [];
-    }
+    // This function is now safe because readData will not throw
+    return readData();
 }
 
 export async function createArchiveItem(formData: FormData): Promise<ArchiveItem> {
