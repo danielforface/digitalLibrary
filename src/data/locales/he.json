@@ -10,8 +10,8 @@
   "all_tags": "כל התגיות",
   "show_less": "הצג פחות",
   "show_more": "הצג עוד {count}",
-  "no_items_found": "לא נמצאו פריטים התואמים את החיפוש.",
-  "no_items_found_desc": "נסה לבחור קטגוריה או תגית אחרת.",
+  "no_items_found": "לא נמצאו תיקיות או פריטים",
+  "no_items_found_desc": "תיקייה זו ריקה. נסה להעלות תוכן.",
   "more_options": "אפשרויות נוספות",
   "edit": "עריכה",
   "move": "העברה",
@@ -112,5 +112,9 @@
   "password_empty": "הסיסמה אינה יכולה להיות ריקה.",
   "unexpected_error": "אירעה שגיאה בלתי צפויה.",
   "logged_out": "התנתקת",
-  "view_only_mode": "אתה כעת במצב צפייה בלבד."
+  "view_only_mode": "אתה כעת במצב צפייה בלבד.",
+  "one_item": "פריט 1",
+  "item_count": "{count} פריטים",
+  "click_to_open_folder": "לחץ/י כדי לצפות בתכולת התיקייה.",
+  "open_folder": "פתח תיקייה"
 }

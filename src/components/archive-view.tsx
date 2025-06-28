@@ -2,16 +2,18 @@
 'use client';
 
 import { useState } from 'react';
-import type { ArchiveItem } from '@/lib/types';
+import type { ArchiveItem, CategoryNode } from '@/lib/types';
 import ArchiveCard from './archive-card';
 import { Button } from './ui/button';
 import { Menu, Upload, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
+import CategoryCard from './category-card';
 
 type ArchiveViewProps = {
   items: ArchiveItem[];
+  subCategories: CategoryNode[];
   onUpload: () => void;
   onView: (item: ArchiveItem) => void;
   onEdit: (item: ArchiveItem) => void;
@@ -22,10 +24,11 @@ type ArchiveViewProps = {
   availableTags: string[];
   selectedTag: string | null;
   onSelectTag: (tag: string | null) => void;
+  onSelectCategory: (category: string) => void;
   isAuthenticated: boolean;
 };
 
-export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, onDeleteRequest, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag, isAuthenticated }: ArchiveViewProps) {
+export default function ArchiveView({ items, subCategories, onUpload, onView, onEdit, onMove, onDeleteRequest, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag, onSelectCategory, isAuthenticated }: ArchiveViewProps) {
   const { t, dir } = useLanguage();
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
@@ -88,8 +91,15 @@ export default function ArchiveView({ items, onUpload, onView, onEdit, onMove, o
         </div>
       )}
       
-      {items.length > 0 ? (
+      {subCategories.length > 0 || items.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          {subCategories.map((node) => (
+            <CategoryCard
+              key={node.path}
+              node={node}
+              onSelectCategory={onSelectCategory}
+            />
+          ))}
           {items.map((item, index) => (
             <ArchiveCard
               key={item.id}

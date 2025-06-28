@@ -10,8 +10,8 @@
   "all_tags": "All Tags",
   "show_less": "Show less",
   "show_more": "Show {count} more",
-  "no_items_found": "No items match your criteria.",
-  "no_items_found_desc": "Try selecting a different category or tag.",
+  "no_items_found": "No Folders or Items Found",
+  "no_items_found_desc": "This folder is empty. Try uploading content.",
   "more_options": "More options",
   "edit": "Edit",
   "move": "Move",
@@ -112,5 +112,9 @@
   "password_empty": "Password cannot be empty.",
   "unexpected_error": "An unexpected error occurred.",
   "logged_out": "Logged out",
-  "view_only_mode": "You are now in view-only mode."
+  "view_only_mode": "You are now in view-only mode.",
+  "one_item": "1 item",
+  "item_count": "{count} items",
+  "click_to_open_folder": "Click to view the contents of this folder.",
+  "open_folder": "Open Folder"
 }

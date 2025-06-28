@@ -22,15 +22,12 @@ import { cn } from '@/lib/utils';
 function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
   
-  // Sort paths to ensure parents are processed before children, making the tree build deterministic
   const allCategoryPaths = [...new Set([...items.map(i => i.category), ...persistedPaths])]
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b));
 
   const nodes: Record<string, CategoryNode> = { '': root };
 
-  // This approach is more robust because sorting ensures parent paths (e.g., "A")
-  // are processed before child paths (e.g., "A/B").
   allCategoryPaths.forEach(path => {
     let currentPath = '';
     path.split('/').forEach(part => {
@@ -39,7 +36,7 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
       
       if (!nodes[currentPath]) {
         nodes[currentPath] = { name: part, path: currentPath, children: [], itemCount: 0 };
-        const parentNode = nodes[parentPath]; // Parent is guaranteed to exist due to sorting
+        const parentNode = nodes[parentPath];
         if (parentNode && !parentNode.children.some(child => child.path === currentPath)) {
             parentNode.children.push(nodes[currentPath]);
         }
@@ -47,14 +44,12 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
     });
   });
 
-  // Count items for each category directly
   items.forEach(item => {
     if (item.category && nodes[item.category]) {
       nodes[item.category].itemCount++;
     }
   });
 
-  // Sum counts up the tree, starting from the children of root
   function sumCounts(node: CategoryNode): number {
     const childCounts = node.children.reduce((sum, child) => sum + sumCounts(child), 0);
     node.itemCount += childCounts;
@@ -62,7 +57,6 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
   }
   sumCounts(root);
   
-  // Sort children of all nodes alphabetically by name
   Object.values(nodes).forEach(node => {
     node.children.sort((a, b) => a.name.localeCompare(b.name));
   });
@@ -126,26 +120,45 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
 
   const categories = useMemo(() => ['All', ...allCategoryPaths], [allCategoryPaths]);
 
-  const filteredItems = useMemo(() => {
-    let categoryFiltered = items;
-    if (selectedCategory !== 'All') {
-        categoryFiltered = items.filter(item => 
-            item.category === selectedCategory || item.category.startsWith(`${selectedCategory}/`)
-        );
+  const { displayedSubCategories, displayedItems } = useMemo(() => {
+    const subCategories: CategoryNode[] = [];
+    let directItems: ArchiveItem[] = [];
+
+    if (selectedCategory === 'All') {
+        subCategories.push(...categoryTree.children);
+        directItems = items.filter(item => !item.category);
+    } else {
+        let selectedNode: CategoryNode | undefined;
+        const findNode = (node: CategoryNode, path: string): CategoryNode | undefined => {
+            if (node.path === path) return node;
+            for (const child of node.children) {
+                const found = findNode(child, path);
+                if (found) return found;
+            }
+            return undefined;
+        };
+        selectedNode = findNode(categoryTree, selectedCategory);
+
+        if (selectedNode) {
+            subCategories.push(...selectedNode.children);
+        }
+        directItems = items.filter(item => item.category === selectedCategory);
     }
-    if (!selectedTag) {
-        return categoryFiltered;
-    }
-    return categoryFiltered.filter(item => item.tags?.includes(selectedTag));
-  }, [items, selectedCategory, selectedTag]);
+    
+    return { displayedSubCategories: subCategories, displayedItems: directItems };
+  }, [items, selectedCategory, categoryTree]);
   
+  const filteredAndTaggedItems = useMemo(() => {
+      if (!selectedTag) {
+          return displayedItems;
+      }
+      return displayedItems.filter(item => item.tags?.includes(selectedTag));
+  }, [displayedItems, selectedTag]);
+
   const availableTags = useMemo(() => {
-    const categoryFiltered = (selectedCategory === 'All') 
-        ? items 
-        : items.filter(item => item.category === selectedCategory || item.category.startsWith(`${selectedCategory}/`));
-    const allTags = categoryFiltered.flatMap(item => item.tags || []);
+    const allTags = displayedItems.flatMap(item => item.tags || []);
     return [...new Set(allTags)].sort();
-  }, [items, selectedCategory]);
+  }, [displayedItems]);
 
 
   const handleOpenDialog = (mode: 'new' | 'edit' | 'view', item?: ArchiveItem) => {
@@ -390,7 +403,8 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
       <div className="flex-1 flex flex-col overflow-hidden">
         {nowPlaying && <MiniAudioPlayer item={nowPlaying} onClose={() => setNowPlaying(null)} />}
         <ArchiveView
-          items={filteredItems}
+          items={filteredAndTaggedItems}
+          subCategories={displayedSubCategories}
           onUpload={() => handleProtectedAction(() => handleOpenDialog('new'))}
           onView={handleViewItem}
           onEdit={(item) => handleProtectedAction(() => handleOpenDialog('edit', item))}
@@ -401,6 +415,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
           availableTags={availableTags}
           selectedTag={selectedTag}
           onSelectTag={setSelectedTag}
+          onSelectCategory={handleSelectCategory}
           isAuthenticated={isAuthenticated}
         />
       </div>
