@@ -43,12 +43,12 @@ export default function AppSidebar({
           <BookOpenCheck className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-headline font-bold text-primary">{t('digital_archive')}</h1>
         </div>
-        <div className="flex items-center gap-3 mt-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
+        <div className="flex flex-col items-center gap-2 mt-4">
+            <Button variant="ghost" className="h-24 w-24 p-0" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
                 <MemorialCandleIcon />
             </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onHealingClick} aria-label={t('healing_prayer')}>
-                <HeartPulse className="h-5 w-5 text-destructive" />
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onHealingClick} aria-label={t('healing_prayer')}>
+                <HeartPulse className="h-6 w-6 text-destructive" />
             </Button>
         </div>
       </div>
