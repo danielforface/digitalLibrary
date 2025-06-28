@@ -51,9 +51,11 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
       let currentNode = nodes[item.category];
       while(currentNode) {
         currentNode.itemCount++;
+        if (currentNode.path === '') {
+            break;
+        }
         const parentPath = currentNode.path.substring(0, currentNode.path.lastIndexOf('/'));
         currentNode = nodes[parentPath];
-         if (currentNode && currentNode.path === '') currentNode.itemCount++;
       }
     } else {
         root.itemCount++;
