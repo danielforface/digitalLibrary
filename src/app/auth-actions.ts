@@ -34,7 +34,7 @@ export async function logout(): Promise<void> {
 export async function checkAuth(): Promise<{ isAuthenticated: boolean }> {
   try {
     const cookieStore = cookies();
-    const authCookie = (await cookieStore).get(AUTH_COOKIE_NAME);
+    const authCookie = cookieStore.get(AUTH_COOKIE_NAME);
     const isAuthenticated = authCookie?.value === 'true';
     return { isAuthenticated };
   } catch (error) {
