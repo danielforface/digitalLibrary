@@ -1,12 +1,13 @@
 
 import { Button } from './ui/button';
-import { Plus, LogOut, BookOpenCheck, Flame, HeartPulse } from 'lucide-react';
+import { Plus, LogOut, BookOpenCheck, HeartPulse } from 'lucide-react';
 import type { CategoryNode } from '@/lib/types';
 import CategoryTreeItem from './category-tree-item';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/context/language-context';
 import LanguageSwitcher from './language-switcher';
+import MemorialCandleIcon from './memorial-candle-icon';
 
 type AppSidebarProps = {
   categoryTree: CategoryNode;
@@ -43,8 +44,8 @@ export default function AppSidebar({
           <h1 className="text-2xl font-headline font-bold text-primary">{t('digital_archive')}</h1>
         </div>
         <div className="flex items-center gap-3 mt-2">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
-                <Flame className="h-5 w-5 text-accent" />
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
+                <MemorialCandleIcon />
             </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onHealingClick} aria-label={t('healing_prayer')}>
                 <HeartPulse className="h-5 w-5 text-destructive" />
