@@ -15,11 +15,13 @@ import DeleteItemDialog from './delete-item-dialog';
 import MoveItemDialog from './move-item-dialog';
 import AddCategoryDialog from './add-category-dialog';
 import LoginDialog from './login-dialog';
-import { checkAuth, logout } from '@/app/auth-actions';
+import { login } from '@/app/auth-actions';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import MemorialDialog from './memorial-dialog';
 import HealingDialog from './healing-dialog';
+
+const AUTH_STORAGE_KEY = 'is_admin_authed';
 
 function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
@@ -79,10 +81,9 @@ type DialogState = {
 type DigitalArchiveAppProps = {
   initialItems: ArchiveItem[];
   initialCategories: string[];
-  initialIsAuthenticated: boolean;
 }
 
-export default function DigitalArchiveApp({ initialItems, initialCategories, initialIsAuthenticated }: DigitalArchiveAppProps) {
+export default function DigitalArchiveApp({ initialItems, initialCategories }: DigitalArchiveAppProps) {
   const { t, dir } = useLanguage();
   const [items, setItems] = useState<ArchiveItem[]>(initialItems);
   const [persistedCategories, setPersistedCategories] = useState<string[]>(initialCategories);
@@ -96,13 +97,18 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ArchiveItem | null>(null);
   const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(initialIsAuthenticated);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void | Promise<void>) | null>(null);
   const [showMemorialDialog, setShowMemorialDialog] = useState(false);
   const [showHealingDialog, setShowHealingDialog] = useState(false);
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
+    setIsAuthenticated(authStatus);
+  }, []);
 
   const handleProtectedAction = useCallback((action: () => void | Promise<void>) => {
     if (isAuthenticated) {
@@ -361,6 +367,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
   };
 
   const handleLoginSuccess = () => {
+    localStorage.setItem(AUTH_STORAGE_KEY, 'true');
     setIsAuthenticated(true);
     setShowLoginDialog(false);
     toast({ title: t('success'), description: t('logged_in_success') });
@@ -370,8 +377,8 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
     }
   };
 
-  const handleLogout = async () => {
-      await logout();
+  const handleLogout = () => {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
       setIsAuthenticated(false);
       toast({ title: t('logged_out'), description: t('view_only_mode')});
   }
