@@ -1,6 +1,6 @@
 import DigitalArchiveApp from '@/components/digital-archive-app';
 import { getArchiveItems, getCategoryPaths } from '@/app/actions';
-import { checkAuth } from '@/app/auth-actions';
+import { checkAuth } from './auth-actions';
 
 export default async function Home() {
   // Fetch initial data on the server
