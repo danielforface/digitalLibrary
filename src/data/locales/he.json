@@ -116,5 +116,11 @@
   "one_item": "פריט 1",
   "item_count": "{count} פריטים",
   "click_to_open_folder": "לחץ/י כדי לצפות בתכולת התיקייה.",
-  "open_folder": "פתח תיקייה"
+  "open_folder": "פתח תיקייה",
+  "memorial_title": "לזכרם",
+  "memorial_desc": "פרויקט זה מוקדש לזכרם של:",
+  "healing_title": "תפילה לרפואה",
+  "healing_desc": "נוצר לרפואתם השלמה והמהירה של:",
+  "memorial_candle": "נר זיכרון",
+  "healing_prayer": "תפילה לרפואה"
 }

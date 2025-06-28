@@ -18,6 +18,8 @@ import LoginDialog from './login-dialog';
 import { checkAuth, logout } from '@/app/auth-actions';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
+import MemorialDialog from './memorial-dialog';
+import HealingDialog from './healing-dialog';
 
 function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
@@ -30,32 +32,33 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
 
   allCategoryPaths.forEach(path => {
     let currentPath = '';
-    path.split('/').forEach(part => {
-      const parentPath = currentPath;
-      currentPath = currentPath ? `${currentPath}/${part}` : part;
+    path.split('/').forEach((part, index, parts) => {
+        const parentPath = parts.slice(0, index).join('/');
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
       
-      if (!nodes[currentPath]) {
-        nodes[currentPath] = { name: part, path: currentPath, children: [], itemCount: 0 };
-        const parentNode = nodes[parentPath];
-        if (parentNode && !parentNode.children.some(child => child.path === currentPath)) {
-            parentNode.children.push(nodes[currentPath]);
+        if (!nodes[currentPath]) {
+            nodes[currentPath] = { name: part, path: currentPath, children: [], itemCount: 0 };
+            const parentNode = nodes[parentPath];
+            if (parentNode && !parentNode.children.some(child => child.path === currentPath)) {
+                parentNode.children.push(nodes[currentPath]);
+            }
         }
-      }
     });
   });
 
   items.forEach(item => {
     if (item.category && nodes[item.category]) {
-      nodes[item.category].itemCount++;
+      let currentNode = nodes[item.category];
+      while(currentNode) {
+        currentNode.itemCount++;
+        const parentPath = currentNode.path.substring(0, currentNode.path.lastIndexOf('/'));
+        currentNode = nodes[parentPath];
+         if (currentNode && currentNode.path === '') currentNode.itemCount++;
+      }
+    } else {
+        root.itemCount++;
     }
   });
-
-  function sumCounts(node: CategoryNode): number {
-    const childCounts = node.children.reduce((sum, child) => sum + sumCounts(child), 0);
-    node.itemCount += childCounts;
-    return node.itemCount;
-  }
-  sumCounts(root);
   
   Object.values(nodes).forEach(node => {
     node.children.sort((a, b) => a.name.localeCompare(b.name));
@@ -94,6 +97,8 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
   const [isAuthenticated, setIsAuthenticated] = useState(initialIsAuthenticated);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void | Promise<void>) | null>(null);
+  const [showMemorialDialog, setShowMemorialDialog] = useState(false);
+  const [showHealingDialog, setShowHealingDialog] = useState(false);
 
   const { toast } = useToast();
 
@@ -121,11 +126,11 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
   const categories = useMemo(() => ['All', ...allCategoryPaths], [allCategoryPaths]);
 
   const { displayedSubCategories, displayedItems } = useMemo(() => {
-    const subCategories: CategoryNode[] = [];
+    let subCategories: CategoryNode[] = [];
     let directItems: ArchiveItem[] = [];
 
     if (selectedCategory === 'All') {
-        subCategories.push(...categoryTree.children);
+        subCategories = categoryTree.children;
         directItems = items.filter(item => !item.category);
     } else {
         let selectedNode: CategoryNode | undefined;
@@ -140,7 +145,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
         selectedNode = findNode(categoryTree, selectedCategory);
 
         if (selectedNode) {
-            subCategories.push(...selectedNode.children);
+            subCategories = selectedNode.children;
         }
         directItems = items.filter(item => item.category === selectedCategory);
     }
@@ -380,6 +385,8 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
         onDeleteCategory={handleDeleteCategoryRequest}
         isAuthenticated={isAuthenticated}
         onLogout={handleLogout}
+        onMemorialClick={() => setShowMemorialDialog(true)}
+        onHealingClick={() => setShowHealingDialog(true)}
       />
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -396,6 +403,8 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
             onDeleteCategory={handleDeleteCategoryRequest}
             isAuthenticated={isAuthenticated}
             onLogout={handleLogout}
+            onMemorialClick={() => setShowMemorialDialog(true)}
+            onHealingClick={() => setShowHealingDialog(true)}
           />
         </SheetContent>
       </Sheet>
@@ -460,6 +469,14 @@ export default function DigitalArchiveApp({ initialItems, initialCategories, ini
         }}
         onSuccess={handleLoginSuccess}
        />
+       <MemorialDialog 
+        isOpen={showMemorialDialog}
+        onClose={() => setShowMemorialDialog(false)}
+       />
+       <HealingDialog
+        isOpen={showHealingDialog}
+        onClose={() => setShowHealingDialog(false)}
+        />
     </div>
   );
 }

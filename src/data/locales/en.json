@@ -116,5 +116,11 @@
   "one_item": "1 item",
   "item_count": "{count} items",
   "click_to_open_folder": "Click to view the contents of this folder.",
-  "open_folder": "Open Folder"
+  "open_folder": "Open Folder",
+  "memorial_title": "In Loving Memory",
+  "memorial_desc": "This project is dedicated to the memory of:",
+  "healing_title": "Prayers for Healing",
+  "healing_desc": "Created for the complete and speedy recovery of:",
+  "memorial_candle": "Memorial Candle",
+  "healing_prayer": "Prayer for Healing"
 }

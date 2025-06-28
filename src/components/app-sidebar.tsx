@@ -1,6 +1,6 @@
 
 import { Button } from './ui/button';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, BookOpenCheck, Flame, HeartPulse } from 'lucide-react';
 import type { CategoryNode } from '@/lib/types';
 import CategoryTreeItem from './category-tree-item';
 import { ScrollArea } from './ui/scroll-area';
@@ -17,6 +17,8 @@ type AppSidebarProps = {
   className?: string;
   isAuthenticated: boolean;
   onLogout: () => void;
+  onMemorialClick: () => void;
+  onHealingClick: () => void;
 };
 
 export default function AppSidebar({
@@ -27,16 +29,29 @@ export default function AppSidebar({
   onDeleteCategory,
   className,
   isAuthenticated,
-  onLogout
+  onLogout,
+  onMemorialClick,
+  onHealingClick
 }: AppSidebarProps) {
   const { t, dir } = useLanguage();
 
   return (
     <aside className={cn("w-72 flex-shrink-0 bg-secondary/50 p-2 flex flex-col", className, dir === 'rtl' ? 'border-l' : 'border-r')}>
-      <div className="p-2">
-        <h1 className="text-2xl font-headline font-bold text-primary">{t('digital_archive')}</h1>
+      <div className="p-2 flex flex-col items-center text-center">
+        <div className="flex items-center gap-2 justify-center">
+          <BookOpenCheck className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-headline font-bold text-primary">{t('digital_archive')}</h1>
+        </div>
+        <div className="flex items-center gap-3 mt-2">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
+                <Flame className="h-5 w-5 text-accent" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onHealingClick} aria-label={t('healing_prayer')}>
+                <HeartPulse className="h-5 w-5 text-destructive" />
+            </Button>
+        </div>
       </div>
-      <div className="flex items-center justify-between px-2 py-1">
+      <div className="flex items-center justify-between px-2 py-1 mt-4">
         <h2 className="text-sm font-semibold text-muted-foreground">{t('categories')}</h2>
         {isAuthenticated && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAddCategory('')}>
