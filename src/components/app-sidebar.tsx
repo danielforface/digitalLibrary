@@ -44,7 +44,7 @@ export default function AppSidebar({
           <h1 className="text-2xl font-headline font-bold text-primary">{t('digital_archive')}</h1>
         </div>
         <div className="flex items-center justify-center gap-4 mt-4">
-            <Button variant="ghost" className="h-16 w-16 p-0" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
+            <Button variant="ghost" className="h-14 w-14 p-0" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
                 <MemorialCandleIcon />
             </Button>
             <Button variant="ghost" size="icon" onClick={onHealingClick} aria-label={t('healing_prayer')}>

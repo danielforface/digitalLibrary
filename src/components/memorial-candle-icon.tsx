@@ -32,7 +32,7 @@ export default function MemorialCandleIcon({ className }: { className?: string }
       {/* Candle */}
       <path
         className="candle-body"
-        d="M7 9C7 8.44772 7.44772 8 8 8H16C16.5523 8 17 8.44772 17 9V23H7V9Z"
+        d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V23H5V9Z"
         strokeWidth="1.5"
       />
        {/* Wick */}
@@ -40,7 +40,7 @@ export default function MemorialCandleIcon({ className }: { className?: string }
       {/* Flame */}
       <g className="flame-path-group">
          <path
-          d="M12 7C9.5 7 9 4.5 10.5 2C11.5 0 12 0 12 0C12 0 12.5 0 13.5 2C15 4.5 14.5 7 12 7Z"
+          d="M12 7C8.5 7 8 4.5 10.5 2C11.5 0 12 0 12 0C12 0 12.5 0 13.5 2C16 4.5 15.5 7 12 7Z"
           fill="hsl(var(--accent))"
         />
       </g>
