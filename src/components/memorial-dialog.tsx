@@ -9,6 +9,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { useLanguage } from '@/context/language-context';
+import MemorialCandleIcon from "./memorial-candle-icon";
 
 type MemorialDialogProps = {
   isOpen: boolean;
@@ -31,16 +32,21 @@ export default function MemorialDialog({ isOpen, onClose }: MemorialDialogProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="text-center">
-        <DialogHeader>
+      <DialogContent className="max-h-[80dvh] flex flex-col">
+        <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-headline">{t('memorial_title')}</DialogTitle>
           <DialogDescription>
             {t('memorial_desc')}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-2">
+        <div className="py-4 grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto">
             {names.map((name, index) => (
-                <p key={index} className="text-lg">{name}</p>
+                <div key={index} className="flex items-center gap-4 p-3 rounded-lg border bg-card shadow-sm">
+                    <div className="w-10 h-10 flex-shrink-0 text-accent">
+                      <MemorialCandleIcon />
+                    </div>
+                    <p className="text-lg font-medium">{name}</p>
+                </div>
             ))}
         </div>
       </DialogContent>

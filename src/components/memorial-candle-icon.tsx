@@ -5,22 +5,22 @@ import { cn } from '@/lib/utils';
 
 export default function MemorialCandleIcon({ className }: { className?: string }) {
   return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg" 
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
       className={cn("h-full w-full", className)}
     >
       <style>
         {`
-          .flame-path {
+          .flame-path-group {
             animation: flicker 2.5s linear infinite;
-            transform-origin: 50% 100%;
+            transform-origin: 12px 7px; /* x y of flame base */
           }
 
           @keyframes flicker {
-            0%, 100% { transform: scaleY(1) rotate(-1deg); opacity: 1; }
-            50% { transform: scaleY(1.1) rotate(1deg) translateY(-2px); opacity: 0.9; }
+            0%, 100% { transform: scale(1) rotate(-1deg); opacity: 1; }
+            50% { transform: scale(1.1) rotate(1deg) translate(0, -2px); opacity: 0.9; }
           }
 
           .candle-body {
@@ -30,17 +30,17 @@ export default function MemorialCandleIcon({ className }: { className?: string }
         `}
       </style>
       {/* Candle */}
-      <path 
+      <path
         className="candle-body"
-        d="M9 16C9 15.4477 9.44772 15 10 15H14C14.5523 15 15 15.4477 15 16V22H9V16Z" 
-        strokeWidth="1"
+        d="M7 9C7 8.44772 7.44772 8 8 8H16C16.5523 8 17 8.44772 17 9V23H7V9Z"
+        strokeWidth="1.5"
       />
        {/* Wick */}
-      <path d="M12 13.5V15" stroke="hsl(var(--foreground))" strokeWidth="1" strokeLinecap="round" />
+      <path d="M12 6.5V8" stroke="hsl(var(--foreground))" strokeWidth="1.5" strokeLinecap="round" />
       {/* Flame */}
-      <g className="flame-path">
-         <path 
-          d="M12 14C11 14 10.5 12.5 11 11C11.5 9.5 12 8 12 8C12 8 12.5 9.5 13 11C13.5 12.5 13 14 12 14Z"
+      <g className="flame-path-group">
+         <path
+          d="M12 7C9.5 7 9 4.5 10.5 2C11.5 0 12 0 12 0C12 0 12.5 0 13.5 2C15 4.5 14.5 7 12 7Z"
           fill="hsl(var(--accent))"
         />
       </g>
