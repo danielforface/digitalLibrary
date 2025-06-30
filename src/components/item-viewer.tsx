@@ -94,12 +94,12 @@ export default function ItemViewer({ item }: ItemViewerProps) {
   const showDownloadButton = ['pdf', 'word', 'image', 'audio', 'video'].includes(item.type);
 
   return (
-    <div className="py-4 space-y-4 h-full flex flex-col">
-      <div className="flex-grow min-h-0 overflow-y-auto">
+    <div className="h-full flex flex-col">
+      <div className="flex-grow min-h-0 overflow-y-auto py-4">
         {renderContent()}
       </div>
       {showDownloadButton && item.url && (
-        <div className={cn("pt-2 flex-shrink-0", dir === 'rtl' ? 'text-left' : 'text-right')}>
+        <div className={cn("pt-4 flex-shrink-0", dir === 'rtl' ? 'text-left' : 'text-right')}>
           <Button asChild>
             <a href={item.url} download={item.title}>
               <Download className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
