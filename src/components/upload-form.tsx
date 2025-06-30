@@ -25,7 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import type { ArchiveItem } from "@/lib/types"
 import { useLanguage } from "@/context/language-context";
 
-const MAX_FILE_SIZE_MB = 50;
+const MAX_FILE_SIZE_MB = 250;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 const fileSchema = z.any()
@@ -430,3 +430,5 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
     </Form>
   )
 }
+
+    
