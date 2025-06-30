@@ -83,8 +83,6 @@
   "form_upload_photo_desc_new": "Upload an optional cover photo.",
   "save_changes": "Save Changes",
   "add_to_archive": "Add to Archive",
-  "add_subcategory_to": "Add subcategory to {name}",
-  "delete_category": "Delete category {name}",
   "open_menu": "Open Menu",
   "language": "Language",
   "success": "Success",
@@ -115,12 +113,17 @@
   "view_only_mode": "You are now in view-only mode.",
   "one_item": "1 item",
   "item_count": "{count} items",
-  "click_to_open_folder": "Click to view the contents of this folder.",
   "open_folder": "Open Folder",
   "memorial_title": "In Loving Memory",
   "memorial_desc": "This project is dedicated to the memory of:",
   "healing_title": "Prayers for Healing",
   "healing_desc": "Created for the complete and speedy recovery of:",
   "memorial_candle": "Memorial Candle",
-  "healing_prayer": "Prayer for Healing"
+  "healing_prayer": "Prayer for Healing",
+  "add_subcategory": "Add subcategory",
+  "move_category_btn": "Move Category",
+  "delete_category_btn": "Delete Category",
+  "move_category_title": "Move Category",
+  "move_category_desc": "Select a new parent category for \"{categoryName}\".",
+  "category_moved_success": "Category and {count} items moved successfully to \"{category}\"."
 }

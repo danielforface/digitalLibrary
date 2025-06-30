@@ -356,3 +356,49 @@ export async function handleCategoryAction(
     revalidatePath('/');
     return { moved: movedCount, deleted: deletedCount };
 }
+
+export async function moveCategory(sourcePath: string, destinationPath: string): Promise<{ movedItemsCount: number; movedCategoriesCount: number }> {
+  if (destinationPath === sourcePath || destinationPath.startsWith(`${sourcePath}/`)) {
+    throw new Error('A category cannot be moved into itself or one of its own subcategories.');
+  }
+
+  const data = await readData();
+  const allCatPaths = await readCategories();
+
+  const sourceName = sourcePath.split('/').pop();
+  if (!sourceName) {
+      throw new Error('The root directory cannot be moved.');
+  }
+
+  const newBasePath = [destinationPath, sourceName].filter(Boolean).join('/');
+
+  if (allCatPaths.includes(newBasePath)) {
+      throw new Error(`A category with the name "${sourceName}" already exists in the destination.`);
+  }
+
+  let movedItemsCount = 0;
+  const updatedData = data.map(item => {
+    if (item.category.startsWith(sourcePath)) {
+      const newCategoryPath = item.category.replace(sourcePath, newBasePath);
+      movedItemsCount++;
+      return { ...item, category: newCategoryPath, updatedAt: new Date().toISOString() };
+    }
+    return item;
+  });
+  
+  let movedCategoriesCount = 0;
+  const updatedCatPaths = allCatPaths.map(p => {
+    if (p.startsWith(sourcePath)) {
+      const newCategoryPath = p.replace(sourcePath, newBasePath);
+      movedCategoriesCount++;
+      return newCategoryPath;
+    }
+    return p;
+  });
+
+  await writeData(updatedData);
+  await writeCategories(updatedCatPaths);
+
+  revalidatePath('/');
+  return { movedItemsCount, movedCategoriesCount };
+}

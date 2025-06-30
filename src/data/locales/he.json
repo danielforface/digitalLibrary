@@ -83,8 +83,6 @@
   "form_upload_photo_desc_new": "העלה תמונת נושא אופציונלית.",
   "save_changes": "שמור שינויים",
   "add_to_archive": "הוסף לארכיון",
-  "add_subcategory_to": "הוסף תת-קטגוריה ל-{name}",
-  "delete_category": "מחק קטגוריה {name}",
   "open_menu": "פתח תפריט",
   "language": "שפה",
   "success": "הצלחה",
@@ -115,12 +113,17 @@
   "view_only_mode": "אתה כעת במצב צפייה בלבד.",
   "one_item": "פריט 1",
   "item_count": "{count} פריטים",
-  "click_to_open_folder": "לחץ/י כדי לצפות בתכולת התיקייה.",
   "open_folder": "פתח תיקייה",
   "memorial_title": "לזכרם",
   "memorial_desc": "פרויקט זה מוקדש לזכרם של:",
   "healing_title": "תפילה לרפואה",
   "healing_desc": "נוצר לרפואתם השלמה והמהירה של:",
   "memorial_candle": "נר זיכרון",
-  "healing_prayer": "תפילה לרפואה"
+  "healing_prayer": "תפילה לרפואה",
+  "add_subcategory": "הוסף תת-קטגוריה",
+  "move_category_btn": "העבר קטגוריה",
+  "delete_category_btn": "מחק קטגוריה",
+  "move_category_title": "העברת קטגוריה",
+  "move_category_desc": "בחר קטגוריית אב חדשה עבור \"{categoryName}\".",
+  "category_moved_success": "הקטגוריה ו-{count} פריטים הועברו בהצלחה אל \"{category}\"."
 }

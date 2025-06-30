@@ -8,7 +8,7 @@ import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory } from '@/app/actions';
+import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory, moveCategory } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
 import DeleteItemDialog from './delete-item-dialog';
@@ -20,6 +20,7 @@ import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import MemorialDialog from './memorial-dialog';
 import HealingDialog from './healing-dialog';
+import MoveCategoryDialog from './move-category-dialog';
 
 const AUTH_STORAGE_KEY = 'is_admin_authed';
 
@@ -94,6 +95,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
+  const [categoryToMove, setCategoryToMove] = useState<CategoryNode | null>(null);
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ArchiveItem | null>(null);
   const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
@@ -317,15 +319,15 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
       }
   };
 
-  const handleMoveRequest = (item: ArchiveItem) => {
+  const handleMoveItemRequest = (item: ArchiveItem) => {
     handleProtectedAction(() => setItemToMove(item));
   };
 
-  const handleCloseMoveDialog = () => {
+  const handleCloseMoveItemDialog = () => {
       setItemToMove(null);
   };
   
-  const handleConfirmMove = async (itemId: string, newCategory: string) => {
+  const handleConfirmMoveItem = async (itemId: string, newCategory: string) => {
       const itemToMove = items.find(i => i.id === itemId);
       if (!itemToMove) {
           toast({ variant: 'destructive', title: t('error'), description: t('item_not_found') });
@@ -353,7 +355,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
           );
           
           toast({ title: t('success'), description: t('item_moved_to', { category: newCategory || t('root_category') }) });
-          handleCloseMoveDialog();
+          handleCloseMoveItemDialog();
       } catch (error) {
           console.error("Error moving item:", error);
           toast({
@@ -365,6 +367,48 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
           setIsSubmitting(false);
       }
   };
+
+  const handleMoveCategoryRequest = (node: CategoryNode) => {
+    handleProtectedAction(() => setCategoryToMove(node));
+  };
+  
+  const handleConfirmMoveCategory = async (sourcePath: string, destinationPath: string) => {
+      setIsSubmitting(true);
+      try {
+          const result = await moveCategory(sourcePath, destinationPath);
+          toast({
+              title: t('success'),
+              description: t('category_moved_success', { 
+                count: result.movedItemsCount, 
+                category: destinationPath || t('root_category') 
+              })
+          });
+          
+          const [newItemData, newCategoryData] = await Promise.all([
+              getArchiveItems(),
+              getCategoryPaths(),
+          ]);
+          setItems(newItemData);
+          setPersistedCategories(newCategoryData);
+  
+          if (selectedCategory.startsWith(sourcePath)) {
+              const sourceName = sourcePath.split('/').pop() || '';
+              const newSelectedPath = [destinationPath, sourceName].filter(Boolean).join('/');
+              const updatedPath = selectedCategory.replace(sourcePath, newSelectedPath);
+              setSelectedCategory(updatedPath);
+          }
+  
+      } catch (error) {
+          toast({
+              variant: 'destructive',
+              title: t('error'),
+              description: (error as Error).message,
+          });
+      } finally {
+          setIsSubmitting(false);
+          setCategoryToMove(null);
+      }
+  }
 
   const handleLoginSuccess = () => {
     localStorage.setItem(AUTH_STORAGE_KEY, 'true');
@@ -391,6 +435,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         selectedCategory={selectedCategory}
         onSelectCategory={handleSelectCategory}
         onAddCategory={handleAddCategoryRequest}
+        onMoveCategoryRequest={handleMoveCategoryRequest}
         onDeleteCategory={handleDeleteCategoryRequest}
         isAuthenticated={isAuthenticated}
         onLogout={handleLogout}
@@ -409,6 +454,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
             selectedCategory={selectedCategory}
             onSelectCategory={handleSelectCategory}
             onAddCategory={handleAddCategoryRequest}
+            onMoveCategoryRequest={handleMoveCategoryRequest}
             onDeleteCategory={handleDeleteCategoryRequest}
             isAuthenticated={isAuthenticated}
             onLogout={handleLogout}
@@ -426,7 +472,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
           onUpload={() => handleProtectedAction(() => handleOpenDialog('new'))}
           onView={handleViewItem}
           onEdit={(item) => handleProtectedAction(() => handleOpenDialog('edit', item))}
-          onMove={handleMoveRequest}
+          onMove={handleMoveItemRequest}
           onDeleteRequest={(item) => handleProtectedAction(() => setItemToDelete(item))}
           categoryTitle={selectedCategory}
           onMenuClick={() => setMobileMenuOpen(true)}
@@ -458,11 +504,19 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
       />
       <MoveItemDialog
           isOpen={!!itemToMove}
-          onClose={handleCloseMoveDialog}
+          onClose={handleCloseMoveItemDialog}
           item={itemToMove}
           allCategoryPaths={allCategoryPaths}
-          onConfirmMove={handleConfirmMove}
+          onConfirmMove={handleConfirmMoveItem}
           isSubmitting={isSubmitting}
+      />
+      <MoveCategoryDialog
+        isOpen={!!categoryToMove}
+        onClose={() => setCategoryToMove(null)}
+        categoryNode={categoryToMove}
+        allCategoryPaths={allCategoryPaths}
+        onConfirmMove={handleConfirmMoveCategory}
+        isSubmitting={isSubmitting}
       />
       <AddCategoryDialog
         isOpen={addCategoryParentPath !== null}

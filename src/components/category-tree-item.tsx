@@ -1,10 +1,17 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { Folder, ChevronRight, Plus, Trash2, MoreVertical, Move } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CategoryNode } from '@/lib/types';
 import { Button } from './ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/context/language-context';
 
 type CategoryTreeItemProps = {
@@ -12,6 +19,7 @@ type CategoryTreeItemProps = {
   selectedCategory: string;
   onSelectCategory: (path: string) => void;
   onAddCategory: (parentPath: string) => void;
+  onMoveCategoryRequest: (node: CategoryNode) => void;
   onDeleteCategory: (node: CategoryNode) => void;
   level?: number;
   isAuthenticated: boolean;
@@ -22,6 +30,7 @@ export default function CategoryTreeItem({
   selectedCategory,
   onSelectCategory,
   onAddCategory,
+  onMoveCategoryRequest,
   onDeleteCategory,
   level = 0,
   isAuthenticated,
@@ -52,6 +61,11 @@ export default function CategoryTreeItem({
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     onAddCategory(node.path);
+  }
+
+  const handleMove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onMoveCategoryRequest(node);
   }
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -104,15 +118,31 @@ export default function CategoryTreeItem({
         </button>
         
         {isAuthenticated && (
-            <div className={cn("opacity-0 group-hover:opacity-100 transition-opacity flex items-center shrink-0", dir === 'rtl' ? 'pl-2' : 'pr-2')}>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleAdd} aria-label={t('add_subcategory_to', {name: node.name})}>
-                    <Plus className="h-4 w-4"/>
-                </Button>
-                {node.path && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive/70 hover:text-destructive" onClick={handleDelete} aria-label={t('delete_category', {name: node.name})}>
-                        <Trash2 className="h-4 w-4"/>
-                    </Button>
-                )}
+            <div className={cn("opacity-0 group-hover:opacity-100 transition-opacity flex items-center shrink-0 pr-1", dir === 'rtl' && 'pl-1 pr-0')}>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">{t('more_options')}</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align={dir === 'rtl' ? 'start' : 'end'} onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={handleAdd}>
+                            <Plus className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                            <span>{t('add_subcategory')}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleMove}>
+                            <Move className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                            <span>{t('move_category_btn')}</span>
+                        </DropdownMenuItem>
+                        {node.path && (
+                            <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                <Trash2 className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                                <span>{t('delete_category_btn')}</span>
+                            </DropdownMenuItem>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         )}
       </div>
@@ -125,6 +155,7 @@ export default function CategoryTreeItem({
               selectedCategory={selectedCategory}
               onSelectCategory={onSelectCategory}
               onAddCategory={onAddCategory}
+              onMoveCategoryRequest={onMoveCategoryRequest}
               onDeleteCategory={onDeleteCategory}
               level={level + 1}
               isAuthenticated={isAuthenticated}

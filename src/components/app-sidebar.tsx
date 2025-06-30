@@ -14,6 +14,7 @@ type AppSidebarProps = {
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
   onAddCategory: (parentPath: string) => void;
+  onMoveCategoryRequest: (node: CategoryNode) => void;
   onDeleteCategory: (node: CategoryNode) => void;
   className?: string;
   isAuthenticated: boolean;
@@ -27,6 +28,7 @@ export default function AppSidebar({
   selectedCategory,
   onSelectCategory,
   onAddCategory,
+  onMoveCategoryRequest,
   onDeleteCategory,
   className,
   isAuthenticated,
@@ -83,6 +85,7 @@ export default function AppSidebar({
                     selectedCategory={selectedCategory}
                     onSelectCategory={onSelectCategory}
                     onAddCategory={onAddCategory}
+                    onMoveCategoryRequest={onMoveCategoryRequest}
                     onDeleteCategory={onDeleteCategory}
                     isAuthenticated={isAuthenticated}
                 />
