@@ -53,7 +53,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         );
       case 'image':
         return (
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-full max-h-[70vh]">
             <Image
               src={item.url!}
               alt={item.title}
@@ -69,7 +69,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         return <video controls src={item.url} className="w-full rounded-lg" />;
       case 'pdf':
         return (
-          <div className="w-full h-full rounded-lg overflow-hidden border">
+          <div className="w-full h-[75vh] rounded-lg overflow-hidden border">
             <iframe src={item.url!} className="w-full h-full border-0" title={item.title} />
           </div>
         );
@@ -78,7 +78,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
           return <p className="text-center py-8">{t('loading_document_viewer')}</p>;
         }
         return (
-          <div className="w-full h-full rounded-lg overflow-hidden border">
+          <div className="w-full h-[75vh] rounded-lg overflow-hidden border">
             <iframe
               src={`https://docs.google.com/gview?url=${encodeURIComponent(absoluteUrl)}&embedded=true`}
               className="w-full h-full border-0"
@@ -94,20 +94,18 @@ export default function ItemViewer({ item }: ItemViewerProps) {
   const showDownloadButton = ['pdf', 'word', 'image', 'audio', 'video'].includes(item.type);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-grow min-h-0 overflow-y-auto py-4">
+    <div>
         {renderContent()}
-      </div>
-      {showDownloadButton && item.url && (
-        <div className={cn("pt-4 flex-shrink-0", dir === 'rtl' ? 'text-left' : 'text-right')}>
-          <Button asChild>
-            <a href={item.url} download={item.title}>
-              <Download className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
-              {t('download')}
-            </a>
-          </Button>
-        </div>
-      )}
+        {showDownloadButton && item.url && (
+            <div className={cn("pt-4 flex-shrink-0", dir === 'rtl' ? 'text-left' : 'text-right')}>
+            <Button asChild>
+                <a href={item.url} download={item.title}>
+                <Download className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                {t('download')}
+                </a>
+            </Button>
+            </div>
+        )}
     </div>
   );
 }
