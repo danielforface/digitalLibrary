@@ -51,15 +51,18 @@ export default function ItemDialog({ dialogState, onClose, onSubmit, allCategori
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={cn(
         "w-[95vw] max-w-sm sm:max-w-xl md:max-w-3xl max-h-[90dvh]",
-        isFullHeightDocument ? 'flex flex-col' : 'overflow-y-auto',
+        // Use flexbox for all view modes to contain the content and let ItemViewer handle scrolling.
+        // For forms, the whole dialog scrolls.
+        mode === 'view' ? 'flex flex-col' : 'overflow-y-auto',
         isFullHeightDocument && "md:max-w-4xl lg:max-w-6xl"
       )}>
-        <DialogHeader className={cn(isFullHeightDocument && "flex-shrink-0")}>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="font-headline text-2xl">{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {mode === 'view' && item ? (
-           <div className={cn(isFullHeightDocument && 'flex-grow min-h-0')}>
+           // This wrapper ensures ItemViewer fills the remaining space.
+           <div className='flex-grow min-h-0'>
             <ItemViewer item={item} />
           </div>
         ) : (
