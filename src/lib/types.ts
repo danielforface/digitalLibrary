@@ -20,3 +20,15 @@ export type CategoryNode = {
   children: CategoryNode[];
   itemCount: number;
 };
+
+export type Person = {
+  id: string;
+  name: string;
+};
+
+export type PeopleData = {
+  memorial: Person[];
+  healing: Person[];
+};
+
+export type PersonType = keyof PeopleData;

@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import fs from 'fs/promises';
 import path from 'path';
-import type { ArchiveItem } from '@/lib/types';
+import type { ArchiveItem, PeopleData, Person, PersonType } from '@/lib/types';
 
 const dataPath = path.resolve(process.cwd(), 'data');
 const jsonPath = path.join(dataPath, 'archive-data.json');
@@ -401,4 +401,67 @@ export async function moveCategory(sourcePath: string, destinationPath: string):
 
   revalidatePath('/');
   return { movedItemsCount, movedCategoriesCount };
+}
+
+const peopleJsonPath = path.join(dataPath, 'people.json');
+
+// Helper functions for people data
+async function readPeopleData(): Promise<PeopleData> {
+  try {
+    const fileContent = await fs.readFile(peopleJsonPath, 'utf-8');
+    if (fileContent.trim() === '') return { memorial: [], healing: [] };
+    return JSON.parse(fileContent);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      const defaultData = { memorial: [], healing: [] };
+      await writePeopleData(defaultData);
+      return defaultData;
+    }
+    console.error(`Error reading or parsing people data from ${peopleJsonPath}:`, error);
+    return { memorial: [], healing: [] };
+  }
+}
+
+async function writePeopleData(data: PeopleData): Promise<void> {
+  await ensureDataDirectory();
+  await fs.writeFile(peopleJsonPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+export async function getPeople(): Promise<PeopleData> {
+    return readPeopleData();
+}
+
+export async function addPerson(type: PersonType, name: string): Promise<Person> {
+    const data = await readPeopleData();
+    const newPerson: Person = {
+        id: Date.now().toString(),
+        name,
+    };
+    data[type].push(newPerson);
+    await writePeopleData(data);
+    revalidatePath('/'); // Revalidate to be safe, though not strictly necessary for dialogs
+    return newPerson;
+}
+
+export async function updatePerson(type: PersonType, id: string, newName: string): Promise<Person> {
+    const data = await readPeopleData();
+    const personIndex = data[type].findIndex(p => p.id === id);
+    if (personIndex === -1) {
+        throw new Error('Person not found');
+    }
+    data[type][personIndex].name = newName;
+    await writePeopleData(data);
+    revalidatePath('/');
+    return data[type][personIndex];
+}
+
+export async function deletePerson(type: PersonType, id: string): Promise<void> {
+    const data = await readPeopleData();
+    const initialLength = data[type].length;
+    data[type] = data[type].filter(p => p.id !== id);
+    if (data[type].length === initialLength) {
+        throw new Error('Person not found');
+    }
+    await writePeopleData(data);
+    revalidatePath('/');
 }

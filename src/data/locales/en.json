@@ -125,5 +125,17 @@
   "delete_category_btn": "Delete Category",
   "move_category_title": "Move Category",
   "move_category_desc": "Select a new parent category for \"{categoryName}\".",
-  "category_moved_success": "Category and {count} items moved successfully to \"{category}\"."
+  "category_moved_success": "Category and {count} items moved successfully to \"{category}\".",
+  "person_name": "Name:",
+  "person_name_placeholder": "Enter the full name",
+  "delete_person_confirm": "This will permanently remove '{name}' from the list.",
+  "add_name": "Add Name",
+  "edit_name_title": "Edit Name",
+  "edit_name_desc": "Update the person's name.",
+  "add_name_title": "Add New Name",
+  "add_memorial_desc": "Add a new name to the memorial list.",
+  "add_healing_desc": "Add a new name to the healing prayer list.",
+  "added_successfully": "added successfully",
+  "updated_successfully": "updated successfully",
+  "deleted_successfully": "deleted successfully"
 }

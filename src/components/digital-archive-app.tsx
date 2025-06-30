@@ -535,10 +535,12 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
        <MemorialDialog 
         isOpen={showMemorialDialog}
         onClose={() => setShowMemorialDialog(false)}
+        isAuthenticated={isAuthenticated}
        />
        <HealingDialog
         isOpen={showHealingDialog}
         onClose={() => setShowHealingDialog(false)}
+        isAuthenticated={isAuthenticated}
         />
     </div>
   );

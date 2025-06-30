@@ -125,5 +125,17 @@
   "delete_category_btn": "מחק קטגוריה",
   "move_category_title": "העברת קטגוריה",
   "move_category_desc": "בחר קטגוריית אב חדשה עבור \"{categoryName}\".",
-  "category_moved_success": "הקטגוריה ו-{count} פריטים הועברו בהצלחה אל \"{category}\"."
+  "category_moved_success": "הקטגוריה ו-{count} פריטים הועברו בהצלחה אל \"{category}\".",
+  "person_name": "שם:",
+  "person_name_placeholder": "הזן את השם המלא",
+  "delete_person_confirm": "פעולה זו תסיר את '{name}' מהרשימה לצמיתות.",
+  "add_name": "הוסף שם",
+  "edit_name_title": "ערוך שם",
+  "edit_name_desc": "עדכן את שם האדם.",
+  "add_name_title": "הוסף שם חדש",
+  "add_memorial_desc": "הוסף שם חדש לרשימת הזיכרון.",
+  "add_healing_desc": "הוסף שם חדש לרשימת התפילה לרפואה.",
+  "added_successfully": "נוסף בהצלחה",
+  "updated_successfully": "עודכן בהצלחה",
+  "deleted_successfully": "נמחק בהצלחה"
 }
