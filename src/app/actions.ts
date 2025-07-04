@@ -3,6 +3,8 @@
 
 import { revalidatePath } from 'next/cache';
 import fs from 'fs/promises';
+import { createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
 import path from 'path';
 import type { ArchiveItem, PeopleData, Person, PersonType } from '@/lib/types';
 
@@ -50,11 +52,19 @@ async function writeData(data: ArchiveItem[]): Promise<void> {
 // Helper function to save a file and return its URL
 async function saveFile(file: File): Promise<string> {
     await fs.mkdir(uploadsPath, { recursive: true });
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
+
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    // Keep unicode characters in filename, but remove problematic ones
+    const sanitizedName = file.name.replace(/[\\/:"*?<>|]/g, '_');
     const filename = `${uniqueSuffix}-${sanitizedName}`;
-    await fs.writeFile(path.join(uploadsPath, filename), fileBuffer);
+    const filePath = path.join(uploadsPath, filename);
+
+    // Use streams to avoid loading the entire file into memory
+    const readableStream = file.stream();
+    const writableStream = createWriteStream(filePath);
+    
+    await pipeline(readableStream, writableStream);
+    
     return `/uploads/${filename}`;
 }
 
@@ -62,9 +72,13 @@ async function saveFile(file: File): Promise<string> {
 async function deleteFile(url: string | undefined): Promise<void> {
     if (url && url.startsWith('/uploads/')) {
         try {
-            await fs.unlink(path.join(process.cwd(), 'public', url));
+            const filePath = path.join(process.cwd(), 'public', url);
+            await fs.unlink(filePath);
         } catch (err) {
-            console.error(`Failed to delete file: ${url}`, err);
+            // It's possible the file doesn't exist, so we can ignore ENOENT errors.
+            if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+              console.error(`Failed to delete file: ${url}`, err);
+            }
         }
     }
 }
