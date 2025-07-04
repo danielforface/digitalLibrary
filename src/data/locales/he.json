@@ -137,5 +137,14 @@
   "add_healing_desc": "הוסף שם חדש לרשימת התפילה לרפואה.",
   "added_successfully": "נוסף בהצלחה",
   "updated_successfully": "עודכן בהצלחה",
-  "deleted_successfully": "נמחק בהצלחה"
+  "deleted_successfully": "נמחק בהצלחה",
+  "paste_from_word": "הדבק מוורד",
+  "clipboard_api_not_supported": "הדפדפן שלך אינו תומך בפעולת ההדבקה הזו.",
+  "paste_successful": "ההדבקה הצליחה",
+  "paste_from_word_success_desc": "התוכן העשיר הודבק והומר ל-Markdown.",
+  "paste_failed": "ההדבקה נכשלה",
+  "no_html_in_clipboard": "לא נמצא טקסט מעוצב (HTML) בלוח ההדבקה.",
+  "permission_denied": "ההרשאה נדחתה",
+  "clipboard_permission_denied_desc": "לא ניתן לגשת ללוח ההדבקה. אנא אשר את ההרשאה בדפדפן.",
+  "unexpected_clipboard_error": "אירעה שגיאה בלתי צפויה בעת הקריאה מלוח ההדבקה."
 }

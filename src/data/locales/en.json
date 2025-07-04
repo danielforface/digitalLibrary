@@ -137,5 +137,14 @@
   "add_healing_desc": "Add a new name to the healing prayer list.",
   "added_successfully": "added successfully",
   "updated_successfully": "updated successfully",
-  "deleted_successfully": "deleted successfully"
+  "deleted_successfully": "deleted successfully",
+  "paste_from_word": "Paste from Word",
+  "clipboard_api_not_supported": "Your browser does not support the Clipboard API for this action.",
+  "paste_successful": "Paste Successful",
+  "paste_from_word_success_desc": "Rich text content has been pasted and converted to Markdown.",
+  "paste_failed": "Paste Failed",
+  "no_html_in_clipboard": "No formatted text (HTML) was found on your clipboard.",
+  "permission_denied": "Permission Denied",
+  "clipboard_permission_denied_desc": "Could not access the clipboard. Please grant permission in your browser.",
+  "unexpected_clipboard_error": "An unexpected error occurred while reading from the clipboard."
 }

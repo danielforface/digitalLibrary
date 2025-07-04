@@ -4,8 +4,9 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2, Bold, Italic, Link, List, Quote, Code, Strikethrough, AlignLeft, AlignCenter, AlignRight, ZoomIn, ZoomOut } from "lucide-react";
+import { Loader2, Bold, Italic, Link, List, Quote, Code, Strikethrough, AlignLeft, AlignCenter, AlignRight, ZoomIn, ZoomOut, ClipboardPaste } from "lucide-react";
 import React from "react";
+import TurndownService from 'turndown';
 
 import { Button } from "@/components/ui/button"
 import {
@@ -24,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import type { ArchiveItem } from "@/lib/types"
 import { useLanguage } from "@/context/language-context";
+import { useToast } from "@/hooks/use-toast";
 
 const MAX_FILE_SIZE_MB = 250;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -61,6 +63,7 @@ type UploadFormProps = {
 
 export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone, isSubmitting }: UploadFormProps) {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   
   const form = useForm<UploadFormData>({
@@ -220,6 +223,79 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
     }, 0);
   };
 
+  const handlePasteFromWord = async () => {
+    if (!navigator.clipboard?.read) {
+        toast({
+            variant: "destructive",
+            title: t('error'),
+            description: t('clipboard_api_not_supported'),
+        });
+        return;
+    }
+
+    try {
+        const clipboardItems = await navigator.clipboard.read();
+        for (const item of clipboardItems) {
+            if (item.types.includes("text/html")) {
+                const blob = await item.getType("text/html");
+                const htmlContent = await blob.text();
+
+                const turndownService = new TurndownService();
+                const markdown = turndownService.turndown(htmlContent);
+
+                const textarea = textareaRef.current;
+                if(textarea){
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const currentValue = form.getValues("content") || "";
+
+                    const updatedValue = 
+                        currentValue.substring(0, start) + 
+                        markdown + 
+                        currentValue.substring(end);
+
+                    form.setValue("content", updatedValue, { shouldValidate: true, shouldDirty: true });
+                    
+                    setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(start + markdown.length, start + markdown.length);
+                    }, 0);
+                } else {
+                    form.setValue("content", markdown, { shouldValidate: true, shouldDirty: true });
+                }
+                
+                toast({ title: t('paste_successful'), description: t('paste_from_word_success_desc') });
+                return;
+            }
+        }
+        
+        toast({
+            variant: "destructive",
+            title: t('paste_failed'),
+            description: t('no_html_in_clipboard'),
+        });
+
+    } catch (err) {
+        console.error("Failed to read clipboard contents: ", err);
+        const error = err as Error;
+        
+        if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+             toast({
+                variant: "destructive",
+                title: t('permission_denied'),
+                description: t('clipboard_permission_denied_desc'),
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: t('paste_failed'),
+                description: t('unexpected_clipboard_error'),
+            });
+        }
+    }
+  };
+
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFinalSubmit)} className="space-y-8 mt-4">
@@ -330,6 +406,10 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                          <Separator orientation="vertical" className="h-5 mx-1" />
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Increase Font Size" onClick={() => applyInlineFormatting('<big>', '</big>')}> <ZoomIn size={16}/> </Button>
                         <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title="Decrease Font Size" onClick={() => applyInlineFormatting('<small>', '</small>')}> <ZoomOut size={16}/> </Button>
+                        <Separator orientation="vertical" className="h-5 mx-1" />
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title={t('paste_from_word')} onClick={handlePasteFromWord}>
+                            <ClipboardPaste size={16}/>
+                        </Button>
                     </div>
                     <FormControl>
                     <Textarea
@@ -430,5 +510,3 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
     </Form>
   )
 }
-
-    
