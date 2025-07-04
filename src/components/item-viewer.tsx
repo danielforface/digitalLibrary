@@ -13,6 +13,7 @@ import remarkBreaks from 'remark-breaks';
 import rehypeRaw from 'rehype-raw';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 type ItemViewerProps = {
   item: ArchiveItem;
@@ -53,12 +54,11 @@ export default function ItemViewer({ item }: ItemViewerProps) {
 
   const markdownComponents: Components = {
     a: ({ node, className, children, href, ...props }) => {
-      const isGfmFootnote = className === 'footnote-ref' || className === 'footnote-backref';
-
-      // Handle standard GFM footnotes which have a valid hash href
-      if (isGfmFootnote && href?.startsWith('#')) {
+      // 1. Handle standard GFM footnotes (which are valid hash links)
+      if ((className === 'footnote-ref' || className === 'footnote-backref') && href?.startsWith('#')) {
         const handleJump = (e: React.MouseEvent | React.KeyboardEvent) => {
           e.preventDefault();
+          e.stopPropagation();
           handleFootnoteJump(href);
         };
         
@@ -78,13 +78,17 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         );
       }
 
-      // This will catch malformed links from Word pastes that get sanitized to have an empty href.
-      // We render them as a simple span to prevent navigation.
-      if (!href) {
-        return <span {...props}>{children}</span>
+      // 2. Identify and neutralize invalid/local links (from Word, etc.)
+      const isWebLink = href?.startsWith('http') || href?.startsWith('mailto:') || href?.startsWith('tel:');
+      const isGfmFootnoteLink = href?.startsWith('#');
+
+      if (!isWebLink && !isGfmFootnoteLink) {
+        // This is a malformed link (e.g., file://, about:blank, or href="").
+        // Render it as plain text to prevent navigation.
+        return <>{React.Children.toArray(children).join('')}</>;
       }
       
-      // Render all other valid links to open in a new tab.
+      // 3. Render all other valid links (web links) to open in a new tab.
       return (
         <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
           {children}
