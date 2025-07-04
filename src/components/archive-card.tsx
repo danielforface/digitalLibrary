@@ -109,8 +109,8 @@ export default function ArchiveCard({ item, onView, onEdit, onMove, onDeleteRequ
                 )}
                 {item.tags && item.tags.length > 0 && (
                     <div className={cn("mt-4 flex flex-wrap gap-2", dir === 'rtl' && 'justify-end')}>
-                    {item.tags.map(tag => (
-                        <Badge key={tag} variant={item.coverImageUrl ? "default" : "secondary"}>{tag}</Badge>
+                    {item.tags.map((tag, index) => (
+                        <Badge key={`${tag}-${index}`} variant={item.coverImageUrl ? "default" : "secondary"}>{tag}</Badge>
                     ))}
                     </div>
                 )}
