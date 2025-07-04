@@ -1,13 +1,12 @@
-
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { ArchiveItem } from '@/lib/types';
 import FileIcon from './file-icon';
 import { Button } from './ui/button';
 import { Download } from 'lucide-react';
-import ReactMarkdown, { type Components } from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import rehypeRaw from 'rehype-raw';
@@ -22,82 +21,108 @@ type ItemViewerProps = {
 export default function ItemViewer({ item }: ItemViewerProps) {
   const { t, dir } = useLanguage();
   const [absoluteUrl, setAbsoluteUrl] = useState('');
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleFootnoteJump = (targetElement: HTMLElement | null) => {
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetElement.classList.add('source-highlight');
+      setTimeout(() => {
+        targetElement.classList.remove('source-highlight');
+      }, 2500);
+    }
+  };
 
   useEffect(() => {
-    // This runs only on the client, so window is available.
     if (item.url) {
-      // Use the URL constructor for a robust way of creating the full URL.
-      // This correctly handles base paths and ensures a valid URL is formed.
       const fullUrl = new URL(item.url, window.location.origin).href;
       setAbsoluteUrl(fullUrl);
     }
   }, [item.url]);
   
-  const handleFootnoteJump = (href: string) => {
-    if (!href.startsWith('#')) return;
-    try {
-      // Decode URI component in case of special characters in footnote IDs
-      const targetId = decodeURIComponent(href.substring(1));
-      const targetElement = document.getElementById(targetId);
-      
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        targetElement.classList.add('source-highlight');
-        setTimeout(() => {
-          targetElement.classList.remove('source-highlight');
-        }, 2500);
-      }
-    } catch (e) {
-      console.error('Could not jump to footnote:', e);
-    }
-  };
+  useEffect(() => {
+    if (contentRef.current && item.type === 'text') {
+      const links = Array.from(contentRef.current.querySelectorAll('a'));
+      const notes: Map<string, { refs: HTMLElement[], def: HTMLElement | null }> = new Map();
 
-  const markdownComponents: Components = {
-    a: ({ node, className, children, href, ...props }) => {
-      // 1. Handle standard GFM footnotes (which are valid hash links for internal scrolling)
-      if ((className === 'footnote-ref' || className === 'footnote-backref') && href?.startsWith('#')) {
-        const handleJump = (e: React.MouseEvent | React.KeyboardEvent) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleFootnoteJump(href);
-        };
+      // --- Pass 1: Find all potential malformed footnote links and categorize them ---
+      links.forEach(link => {
+        const href = link.getAttribute('href');
+        const text = link.textContent?.trim();
+        const isPotentiallyMalformed = !href || href === '' || href.startsWith('file:');
+        const match = text?.match(/^\[(\d+)\]$/);
+
+        if (match && isPotentiallyMalformed) {
+          const num = match[1];
+          if (!notes.has(num)) {
+            notes.set(num, { refs: [], def: null });
+          }
+          
+          const parentText = link.parentElement?.textContent?.trim();
+          // Heuristic: If parent paragraph starts with the link text, it's a definition.
+          if (parentText?.startsWith(text!)) {
+            notes.get(num)!.def = link;
+          } else {
+            notes.get(num)!.refs.push(link);
+          }
+        }
+      });
+      
+      // --- Pass 2: Wire up the connections for malformed links ---
+      notes.forEach((note, num) => {
+        if (note.def && note.refs.length > 0) {
+          const defTargetEl = note.def.closest('p') || note.def;
+          defTargetEl.id = `definition-target-${num}`;
+
+          note.refs.forEach((refLink, index) => {
+            const refTargetEl = refLink.closest('p') || refLink;
+            refTargetEl.id = `reference-target-${num}-${index}`;
+            
+            refLink.onclick = (e) => {
+              e.preventDefault();
+              handleFootnoteJump(defTargetEl);
+            };
+          });
+          
+          note.def.onclick = (e) => {
+            e.preventDefault();
+            const firstRefEl = document.getElementById(`reference-target-${num}-0`);
+            handleFootnoteJump(firstRefEl);
+          };
+
+        } else {
+          // Neutralize links that don't have a pair
+          note.refs.forEach(refLink => { refLink.onclick = (e) => e.preventDefault(); });
+          if (note.def) { note.def.onclick = (e) => e.preventDefault(); }
+        }
+      });
+
+      // --- Pass 3: Handle standard GFM links and other web links ---
+      links.forEach(link => {
+        // If the link was already handled by our custom logic, skip it.
+        if (link.onclick) return;
+
+        const href = link.getAttribute('href');
         
-        return (
-          <span
-            {...props}
-            className={cn(className, "cursor-pointer")}
-            role="button"
-            tabIndex={0}
-            onClick={handleJump}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') handleJump(e);
-            }}
-          >
-            {children}
-          </span>
-        );
-      }
+        // Handle standard GFM footnotes (which use hash links)
+        if (href && href.startsWith('#')) {
+          link.onclick = (e) => {
+            e.preventDefault();
+            try {
+              const targetId = decodeURIComponent(href.substring(1));
+              const targetElement = document.getElementById(targetId);
+              handleFootnoteJump(targetElement);
+            } catch (err) { console.error('Error jumping to GFM footnote:', err); }
+          };
+        } else {
+          // Open all other valid web links in a new tab
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+        }
+      });
+    }
+  }, [item.content, item.type]);
 
-      // 2. Identify and neutralize invalid/local links (from Word, etc.)
-      const isWebLink = href?.startsWith('http') || href?.startsWith('mailto:') || href?.startsWith('tel:');
-      // A GFM footnote link is also valid for our purposes, even though it's not a web link.
-      const isGfmFootnoteLink = href?.startsWith('#');
-
-      // If it's not a web link and not a GFM footnote, it's a malformed link we want to disable.
-      if (!isWebLink && !isGfmFootnoteLink) {
-        // This renders the content of the link (e.g., "[1]") as plain text, removing the <a> tag.
-        return <>{React.Children.toArray(children).join('')}</>;
-      }
-      
-      // 3. Render all other valid links (web links and valid GFM footnotes that somehow slipped through the first check)
-      // We will open web links in a new tab. For GFM, the default browser behavior is fine as a fallback if our JS fails.
-      return (
-        <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
-          {children}
-        </a>
-      );
-    },
-  };
 
   const renderContent = () => {
     if (!item.url && item.type !== 'text') {
@@ -112,14 +137,15 @@ export default function ItemViewer({ item }: ItemViewerProps) {
     switch (item.type) {
       case 'text':
         return (
-          <div className="prose dark:prose-invert max-w-none">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkBreaks]}
-              rehypePlugins={[rehypeRaw]}
-              components={markdownComponents}
-            >
-              {item.content || ''}
-            </ReactMarkdown>
+          <div ref={contentRef}>
+            <div className="prose dark:prose-invert max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkBreaks]}
+                rehypePlugins={[rehypeRaw]}
+              >
+                {item.content || ''}
+              </ReactMarkdown>
+            </div>
           </div>
         );
       case 'image':
