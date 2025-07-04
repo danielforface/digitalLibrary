@@ -134,4 +134,24 @@ html[lang="he"] body {
   .dark .prose code {
     @apply bg-secondary text-secondary-foreground;
   }
+
+  /* Footnotes Styling */
+  .prose .footnotes {
+    @apply mt-12 pt-6 border-t border-border/50 text-sm;
+  }
+  .prose .footnotes ol {
+    @apply list-inside my-4;
+  }
+  .prose a.footnote-ref {
+    @apply inline-block no-underline font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-sm px-1 mx-0.5;
+  }
+  .prose .footnote-backref {
+    @apply no-underline text-primary/80 hover:text-primary;
+  }
+  
+  .source-highlight {
+    background-color: hsl(var(--primary) / 0.2);
+    border-radius: var(--radius);
+    transition: background-color 1.5s ease-out;
+  }
 }
