@@ -54,7 +54,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
 
   const markdownComponents: Components = {
     a: ({ node, className, children, href, ...props }) => {
-      // 1. Handle standard GFM footnotes (which are valid hash links)
+      // 1. Handle standard GFM footnotes (which are valid hash links for internal scrolling)
       if ((className === 'footnote-ref' || className === 'footnote-backref') && href?.startsWith('#')) {
         const handleJump = (e: React.MouseEvent | React.KeyboardEvent) => {
           e.preventDefault();
@@ -80,15 +80,17 @@ export default function ItemViewer({ item }: ItemViewerProps) {
 
       // 2. Identify and neutralize invalid/local links (from Word, etc.)
       const isWebLink = href?.startsWith('http') || href?.startsWith('mailto:') || href?.startsWith('tel:');
+      // A GFM footnote link is also valid for our purposes, even though it's not a web link.
       const isGfmFootnoteLink = href?.startsWith('#');
 
+      // If it's not a web link and not a GFM footnote, it's a malformed link we want to disable.
       if (!isWebLink && !isGfmFootnoteLink) {
-        // This is a malformed link (e.g., file://, about:blank, or href="").
-        // Render it as plain text to prevent navigation.
+        // This renders the content of the link (e.g., "[1]") as plain text, removing the <a> tag.
         return <>{React.Children.toArray(children).join('')}</>;
       }
       
-      // 3. Render all other valid links (web links) to open in a new tab.
+      // 3. Render all other valid links (web links and valid GFM footnotes that somehow slipped through the first check)
+      // We will open web links in a new tab. For GFM, the default browser behavior is fine as a fallback if our JS fails.
       return (
         <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
           {children}
