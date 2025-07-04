@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 import { LanguageProvider } from '@/context/language-context';
 
 export const metadata: Metadata = {
-  title: 'Digital Archive',
-  description: 'Your personal digital archive.',
+  title: 'אמרי נכוחים',
+  description: 'ארכיון התוכן של אמרי נכוחים',
 };
 
 export default function RootLayout({
