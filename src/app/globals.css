@@ -142,7 +142,7 @@ html[lang="he"] body {
   .prose .footnotes ol {
     @apply list-inside my-4;
   }
-  .prose a.footnote-ref {
+  .prose .footnote-ref {
     @apply inline-block no-underline font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-sm px-1 mx-0.5;
   }
   .prose .footnote-backref {

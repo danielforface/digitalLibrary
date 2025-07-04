@@ -62,9 +62,11 @@ export default function ItemViewer({ item }: ItemViewerProps) {
           handleFootnoteJump(href);
         };
 
+        // By rendering a <span> instead of an <a>, we prevent any default link navigation behavior.
         return (
-          <a
-            className={className}
+          <span
+            {...props}
+            className={cn(className, "cursor-pointer")}
             role="button"
             tabIndex={0}
             onClick={handleJump}
@@ -73,7 +75,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
             }}
           >
             {children}
-          </a>
+          </span>
         );
       }
       
@@ -111,7 +113,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
         );
       case 'image':
         return (
-          <div className="relative w-full h-auto min-h-64" style={{aspectRatio: '16/9'}}>
+          <div className="relative w-full h-[75dvh]">
             <Image
               src={item.url!}
               alt={item.title}
