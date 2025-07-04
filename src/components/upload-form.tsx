@@ -54,7 +54,7 @@ const formSchema = z.object({
 export type UploadFormData = z.infer<typeof formSchema>;
 
 type UploadFormProps = {
-  onSubmit: (data: UploadFormData) => void;
+  onSubmit: (data: FormData) => void;
   itemToEdit?: ArchiveItem;
   allCategories: string[];
   onDone: () => void;
@@ -118,7 +118,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
         apiFormData.append(key, String(value));
       }
     });
-    onSubmit(apiFormData as any);
+    onSubmit(apiFormData);
   };
 
   const applyInlineFormatting = (prefix: string, suffix: string = prefix) => {
@@ -443,7 +443,10 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                   <Input 
                     type="file"
                     accept={getAcceptAttribute('main')}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
                     onChange={(e) => field.onChange(e.target.files)}
+                    disabled={isSubmitting}
                   />
                 </FormControl>
                 <FormDescription>
@@ -467,6 +470,7 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                         <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            disabled={isSubmitting}
                         />
                         </FormControl>
                         <FormLabel className="font-normal">
@@ -486,8 +490,10 @@ export default function UploadForm({ onSubmit, itemToEdit, allCategories, onDone
                     <Input 
                         type="file"
                         accept={getAcceptAttribute('cover')}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
                         onChange={(e) => field.onChange(e.target.files)}
-                        disabled={removeCoverImage}
+                        disabled={removeCoverImage || isSubmitting}
                     />
                     </FormControl>
                     <FormDescription>
