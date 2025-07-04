@@ -53,16 +53,15 @@ export default function ItemViewer({ item }: ItemViewerProps) {
 
   const markdownComponents: Components = {
     a: ({ node, className, children, href, ...props }) => {
-      const isFootnoteRef = className === 'footnote-ref';
-      const isFootnoteBackRef = className === 'footnote-backref';
+      const isGfmFootnote = className === 'footnote-ref' || className === 'footnote-backref';
 
-      if (href && (isFootnoteRef || isFootnoteBackRef)) {
+      // Handle standard GFM footnotes which have a valid hash href
+      if (isGfmFootnote && href?.startsWith('#')) {
         const handleJump = (e: React.MouseEvent | React.KeyboardEvent) => {
           e.preventDefault();
           handleFootnoteJump(href);
         };
-
-        // By rendering a <span> instead of an <a>, we prevent any default link navigation behavior.
+        
         return (
           <span
             {...props}
@@ -78,8 +77,14 @@ export default function ItemViewer({ item }: ItemViewerProps) {
           </span>
         );
       }
+
+      // This will catch malformed links from Word pastes that get sanitized to have an empty href.
+      // We render them as a simple span to prevent navigation.
+      if (!href) {
+        return <span {...props}>{children}</span>
+      }
       
-      // Render normal links to open in a new tab
+      // Render all other valid links to open in a new tab.
       return (
         <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
           {children}
@@ -154,7 +159,7 @@ export default function ItemViewer({ item }: ItemViewerProps) {
   const showDownloadButton = ['pdf', 'word', 'image', 'audio', 'video'].includes(item.type);
 
   return (
-    <div>
+    <div className='pb-6'>
         {renderContent()}
         {showDownloadButton && item.url && (
             <div className={cn("pt-4 flex-shrink-0", dir === 'rtl' ? 'text-left' : 'text-right')}>
