@@ -1,6 +1,6 @@
 
 {
-  "digital_archive": "Digital Archive",
+  "digital_archive": "אמרי נכוחים",
   "categories": "Categories",
   "all_items": "All Items",
   "add_root_category": "Add Root Category",
@@ -121,11 +121,15 @@
   "memorial_candle": "Memorial Candle",
   "healing_prayer": "Prayer for Healing",
   "add_subcategory": "Add subcategory",
+  "edit_category_btn": "Edit Category",
   "move_category_btn": "Move Category",
   "delete_category_btn": "Delete Category",
   "move_category_title": "Move Category",
   "move_category_desc": "Select a new parent category for \"{categoryName}\".",
+  "edit_category_title": "Edit Category Name",
+  "edit_category_desc": "Enter a new name for the category \"{categoryName}\".",
   "category_moved_success": "Category and {count} items moved successfully to \"{category}\".",
+  "category_updated_success": "Category name updated successfully.",
   "person_name": "Name:",
   "person_name_placeholder": "Enter the full name",
   "delete_person_confirm": "This will permanently remove '{name}' from the list.",

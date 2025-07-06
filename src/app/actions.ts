@@ -417,6 +417,45 @@ export async function moveCategory(sourcePath: string, destinationPath: string):
   return { movedItemsCount, movedCategoriesCount };
 }
 
+export async function renameCategory(oldPath: string, newName: string): Promise<{ newPath: string }> {
+  if (newName.includes('/')) {
+    throw new Error('Category name cannot contain slashes.');
+  }
+
+  const allData = await readData();
+  const allCatPaths = await readCategories();
+
+  const parentPath = oldPath.includes('/') ? oldPath.substring(0, oldPath.lastIndexOf('/')) : '';
+  const newPath = parentPath ? `${parentPath}/${newName}` : newName;
+
+  if (allCatPaths.includes(newPath)) {
+    throw new Error(`A category with the name "${newName}" already exists.`);
+  }
+
+  // Update items
+  const updatedData = allData.map(item => {
+    if (item.category.startsWith(oldPath)) {
+      const updatedCategory = item.category.replace(oldPath, newPath);
+      return { ...item, category: updatedCategory, updatedAt: new Date().toISOString() };
+    }
+    return item;
+  });
+
+  // Update category paths
+  const updatedCatPaths = allCatPaths.map(p => {
+    if (p.startsWith(oldPath)) {
+      return p.replace(oldPath, newPath);
+    }
+    return p;
+  });
+
+  await writeData(updatedData);
+  await writeCategories(updatedCatPaths);
+
+  revalidatePath('/');
+  return { newPath };
+}
+
 const peopleJsonPath = path.join(dataPath, 'people.json');
 
 // Helper functions for people data

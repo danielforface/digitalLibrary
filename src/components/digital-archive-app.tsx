@@ -8,7 +8,7 @@ import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory, moveCategory } from '@/app/actions';
+import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory, moveCategory, renameCategory } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
 import DeleteItemDialog from './delete-item-dialog';
@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import MemorialDialog from './memorial-dialog';
 import HealingDialog from './healing-dialog';
 import MoveCategoryDialog from './move-category-dialog';
+import EditCategoryDialog from './edit-category-dialog';
 
 const AUTH_STORAGE_KEY = 'is_admin_authed';
 
@@ -96,6 +97,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
   const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<CategoryNode | null>(null);
   const [categoryToMove, setCategoryToMove] = useState<CategoryNode | null>(null);
+  const [categoryToEdit, setCategoryToEdit] = useState<CategoryNode | null>(null);
   const [itemToMove, setItemToMove] = useState<ArchiveItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<ArchiveItem | null>(null);
   const [addCategoryParentPath, setAddCategoryParentPath] = useState<string | null>(null);
@@ -410,6 +412,41 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
       }
   }
 
+  const handleEditCategoryRequest = (node: CategoryNode) => {
+    handleProtectedAction(() => setCategoryToEdit(node));
+  };
+
+  const handleConfirmEditCategory = async (newName: string) => {
+    if (!categoryToEdit) return;
+    setIsSubmitting(true);
+    try {
+      const { newPath } = await renameCategory(categoryToEdit.path, newName);
+      
+      const [newItemData, newCategoryData] = await Promise.all([
+          getArchiveItems(),
+          getCategoryPaths(),
+      ]);
+      setItems(newItemData);
+      setPersistedCategories(newCategoryData);
+
+      if (selectedCategory.startsWith(categoryToEdit.path)) {
+        const updatedSelectedPath = selectedCategory.replace(categoryToEdit.path, newPath);
+        setSelectedCategory(updatedSelectedPath);
+      }
+      
+      toast({ title: t('success'), description: t('category_updated_success') });
+      setCategoryToEdit(null);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('error'),
+        description: (error as Error).message,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleLoginSuccess = () => {
     localStorage.setItem(AUTH_STORAGE_KEY, 'true');
     setIsAuthenticated(true);
@@ -437,6 +474,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         onAddCategory={handleAddCategoryRequest}
         onMoveCategoryRequest={handleMoveCategoryRequest}
         onDeleteCategory={handleDeleteCategoryRequest}
+        onEditCategory={handleEditCategoryRequest}
         isAuthenticated={isAuthenticated}
         onLogout={handleLogout}
         onMemorialClick={() => setShowMemorialDialog(true)}
@@ -456,6 +494,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
             onAddCategory={handleAddCategoryRequest}
             onMoveCategoryRequest={handleMoveCategoryRequest}
             onDeleteCategory={handleDeleteCategoryRequest}
+            onEditCategory={handleEditCategoryRequest}
             isAuthenticated={isAuthenticated}
             onLogout={handleLogout}
             onMemorialClick={() => setShowMemorialDialog(true)}
@@ -542,6 +581,13 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         onClose={() => setShowHealingDialog(false)}
         isAuthenticated={isAuthenticated}
         />
+       <EditCategoryDialog
+        isOpen={!!categoryToEdit}
+        onClose={() => setCategoryToEdit(null)}
+        onConfirm={handleConfirmEditCategory}
+        categoryNode={categoryToEdit}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

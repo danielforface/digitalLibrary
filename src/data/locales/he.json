@@ -1,6 +1,6 @@
 
 {
-  "digital_archive": "ארכיון דיגיטלי",
+  "digital_archive": "אמרי נכוחים",
   "categories": "קטגוריות",
   "all_items": "כל הפריטים",
   "add_root_category": "הוסף קטגוריית שורש",
@@ -121,11 +121,15 @@
   "memorial_candle": "נר זיכרון",
   "healing_prayer": "תפילה לרפואה",
   "add_subcategory": "הוסף תת-קטגוריה",
+  "edit_category_btn": "עריכת קטגוריה",
   "move_category_btn": "העבר קטגוריה",
   "delete_category_btn": "מחק קטגוריה",
   "move_category_title": "העברת קטגוריה",
   "move_category_desc": "בחר קטגוריית אב חדשה עבור \"{categoryName}\".",
+  "edit_category_title": "עריכת שם קטגוריה",
+  "edit_category_desc": "הזן שם חדש עבור הקטגוריה \"{categoryName}\".",
   "category_moved_success": "הקטגוריה ו-{count} פריטים הועברו בהצלחה אל \"{category}\".",
+  "category_updated_success": "שם הקטגוריה עודכן בהצלחה.",
   "person_name": "שם:",
   "person_name_placeholder": "הזן את השם המלא",
   "delete_person_confirm": "פעולה זו תסיר את '{name}' מהרשימה לצמיתות.",

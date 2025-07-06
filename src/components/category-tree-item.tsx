@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, ChevronRight, Plus, Trash2, MoreVertical, Move } from 'lucide-react';
+import { Folder, ChevronRight, Plus, Trash2, MoreVertical, Move, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CategoryNode } from '@/lib/types';
 import { Button } from './ui/button';
@@ -21,6 +21,7 @@ type CategoryTreeItemProps = {
   onAddCategory: (parentPath: string) => void;
   onMoveCategoryRequest: (node: CategoryNode) => void;
   onDeleteCategory: (node: CategoryNode) => void;
+  onEditCategory: (node: CategoryNode) => void;
   level?: number;
   isAuthenticated: boolean;
 };
@@ -32,6 +33,7 @@ export default function CategoryTreeItem({
   onAddCategory,
   onMoveCategoryRequest,
   onDeleteCategory,
+  onEditCategory,
   level = 0,
   isAuthenticated,
 }: CategoryTreeItemProps) {
@@ -71,6 +73,11 @@ export default function CategoryTreeItem({
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDeleteCategory(node);
+  }
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEditCategory(node);
   }
 
 
@@ -131,6 +138,10 @@ export default function CategoryTreeItem({
                             <Plus className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
                             <span>{t('add_subcategory')}</span>
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleEdit}>
+                            <Edit className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                            <span>{t('edit_category_btn')}</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={handleMove}>
                             <Move className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
                             <span>{t('move_category_btn')}</span>
@@ -157,6 +168,7 @@ export default function CategoryTreeItem({
               onAddCategory={onAddCategory}
               onMoveCategoryRequest={onMoveCategoryRequest}
               onDeleteCategory={onDeleteCategory}
+              onEditCategory={onEditCategory}
               level={level + 1}
               isAuthenticated={isAuthenticated}
             />
