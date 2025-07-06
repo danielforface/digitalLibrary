@@ -113,13 +113,19 @@ async function readCategories(): Promise<string[]> {
 
 async function writeCategories(paths: string[]): Promise<void> {
   await ensureDataDirectory();
-  const uniqueSortedPaths = [...new Set(paths)].sort();
-  await fs.writeFile(categoriesJsonPath, JSON.stringify(uniqueSortedPaths, null, 2), 'utf-8');
+  // The order is now managed by the client, so we don't sort here.
+  const uniquePaths = [...new Set(paths)];
+  await fs.writeFile(categoriesJsonPath, JSON.stringify(uniquePaths, null, 2), 'utf-8');
 }
 
 export async function getCategoryPaths(): Promise<string[]> {
     // This function is now safe because readCategories will not throw
     return readCategories();
+}
+
+export async function updateCategoryOrder(paths: string[]): Promise<void> {
+    await writeCategories(paths);
+    revalidatePath('/');
 }
 
 export async function addCategoryPath(newPath: string): Promise<void> {

@@ -158,5 +158,8 @@
   "title_desc": "Title (Z-A)",
   "filter_by_type": "Filter by type",
   "filter_by_tag": "Filter by tag",
-  "all_types": "All Types"
+  "all_types": "All Types",
+  "reorder": "Reorder",
+  "done": "Done",
+  "order_saved": "New order saved successfully."
 }

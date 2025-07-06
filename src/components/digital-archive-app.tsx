@@ -8,7 +8,7 @@ import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory, moveCategory, renameCategory } from '@/app/actions';
+import { getArchiveItems, createArchiveItem, updateArchiveItem, deleteArchiveItem, getCategoryPaths, addCategoryPath, deleteEmptyCategory, moveCategory, renameCategory, updateCategoryOrder } from '@/app/actions';
 import MiniAudioPlayer from './mini-audio-player';
 import DeleteCategoryDialog from './delete-category-dialog';
 import DeleteItemDialog from './delete-item-dialog';
@@ -25,12 +25,11 @@ import EditCategoryDialog from './edit-category-dialog';
 
 const AUTH_STORAGE_KEY = 'is_admin_authed';
 
-function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): CategoryNode {
+function buildCategoryTree(items: ArchiveItem[], orderedPaths: string[]): CategoryNode {
   const root: CategoryNode = { name: 'Root', path: '', children: [], itemCount: 0 };
   
-  const allCategoryPaths = [...new Set([...items.map(i => i.category), ...persistedPaths])]
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b));
+  // Use the pre-ordered list of paths as the source of truth for categories
+  const allCategoryPaths = [...new Set(orderedPaths)].filter(Boolean);
 
   const nodes: Record<string, CategoryNode> = { '': root };
 
@@ -66,9 +65,7 @@ function buildCategoryTree(items: ArchiveItem[], persistedPaths: string[]): Cate
     }
   });
   
-  Object.values(nodes).forEach(node => {
-    node.children.sort((a, b) => a.name.localeCompare(b.name));
-  });
+  // Do not re-sort children here, rely on the order from `allCategoryPaths`
   
   return root;
 }
@@ -89,6 +86,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
   const { t, dir, lang } = useLanguage();
   const [items, setItems] = useState<ArchiveItem[]>(initialItems);
   const [persistedCategories, setPersistedCategories] = useState<string[]>(initialCategories);
+  const [categoryTree, setCategoryTree] = useState(() => buildCategoryTree(initialItems, initialCategories));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -108,8 +106,28 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
   const [pendingAction, setPendingAction] = useState<(() => void | Promise<void>) | null>(null);
   const [showMemorialDialog, setShowMemorialDialog] = useState(false);
   const [showHealingDialog, setShowHealingDialog] = useState(false);
+  const [isReorderMode, setIsReorderMode] = useState(false);
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    // This effect synchronizes categories from items into the persisted list on mount.
+    const itemCategories = new Set(initialItems.map(i => i.category).filter(Boolean));
+    const persistedSet = new Set(initialCategories);
+    const newCategories = [...itemCategories].filter(c => !persistedSet.has(c));
+    if (newCategories.length > 0) {
+      const updatedPaths = [...initialCategories, ...newCategories];
+      setPersistedCategories(updatedPaths);
+      if (localStorage.getItem(AUTH_STORAGE_KEY) === 'true') {
+        updateCategoryOrder(updatedPaths);
+      }
+    }
+  }, [initialItems, initialCategories]);
+
+  useEffect(() => {
+    setCategoryTree(buildCategoryTree(items, persistedCategories));
+  }, [items, persistedCategories]);
+
 
   useEffect(() => {
     const authStatus = localStorage.getItem(AUTH_STORAGE_KEY) === 'true';
@@ -124,8 +142,6 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         setShowLoginDialog(true);
     }
   }, [isAuthenticated]);
-
-  const categoryTree = useMemo(() => buildCategoryTree(items, persistedCategories), [items, persistedCategories]);
 
   const allCategoryPaths = useMemo(() => {
     const paths = new Set<string>();
@@ -225,8 +241,9 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
     setIsSubmitting(true);
     
     try {
+      let updatedItem;
       if (dialogState.mode === 'edit' && dialogState.item) {
-        const updatedItem = await updateArchiveItem(dialogState.item.id, formData);
+        updatedItem = await updateArchiveItem(dialogState.item.id, formData);
         setItems(prevItems =>
           prevItems.map(item =>
             item.id === updatedItem.id ? updatedItem : item
@@ -234,14 +251,16 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         );
         toast({ title: t('success'), description: t('item_updated') });
       } else {
-        const newItem = await createArchiveItem(formData);
-        setItems(prevItems => [newItem, ...prevItems]);
+        updatedItem = await createArchiveItem(formData);
+        setItems(prevItems => [updatedItem, ...prevItems]);
         toast({ title: t('success'), description: t('item_added') });
       }
 
       const category = formData.get('category') as string;
       if (category && !persistedCategories.includes(category)) {
-        setPersistedCategories(prev => [...prev, category].sort());
+        const newPaths = [...persistedCategories, category];
+        setPersistedCategories(newPaths);
+        await updateCategoryOrder(newPaths);
       }
       handleCloseDialog();
     } catch (error) {
@@ -300,14 +319,14 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
     
     const newPath = addCategoryParentPath ? `${addCategoryParentPath}/${newCategoryName}` : newCategoryName;
 
-    if (allCategoryPaths.includes(newPath)) {
+    if (persistedCategories.includes(newPath)) {
       toast({ variant: 'destructive', title: t('error'), description: t('category_already_exists') });
       return;
     }
 
     try {
       await addCategoryPath(newPath);
-      setPersistedCategories(prev => [...prev, newPath].sort());
+      setPersistedCategories(prev => [...prev, newPath]);
       toast({ title: t('category_added'), description: t('category_ready', { path: newPath })});
       setAddCategoryParentPath(null);
     } catch (error) {
@@ -325,8 +344,9 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
       setCategoryToDelete(node);
     } else {
         if(window.confirm(`Are you sure you want to delete the empty category "${node.path}"? This cannot be undone.`)) {
-            deleteEmptyCategory(node.path).then(() => {
-                setPersistedCategories(prev => prev.filter(p => p !== node.path && !p.startsWith(`${node.path}/`)));
+            deleteEmptyCategory(node.path).then(async () => {
+                const newPaths = await getCategoryPaths();
+                setPersistedCategories(newPaths);
                 toast({ title: t('empty_category_removed') });
                 if (selectedCategory.startsWith(node.path)) {
                     setSelectedCategory('All');
@@ -338,9 +358,12 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
     }
   });
   
-  const handleCloseDeleteDialog = () => {
+  const handleCloseDeleteDialog = async () => {
       const path = categoryToDelete?.path;
       setCategoryToDelete(null);
+      // Refresh categories from server after action
+      const newPaths = await getCategoryPaths();
+      setPersistedCategories(newPaths);
       if (path && (selectedCategory === path || selectedCategory.startsWith(`${path}/`))) {
           setSelectedCategory('All');
       }
@@ -488,6 +511,51 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
       setIsAuthenticated(false);
       toast({ title: t('logged_out'), description: t('view_only_mode')});
   }
+  
+  const deepClone = (obj: any) => JSON.parse(JSON.stringify(obj));
+
+  const reorderInChildren = (node: CategoryNode, parentPath: string, targetPath: string, direction: 'up' | 'down'): CategoryNode => {
+      if (node.path === parentPath) {
+          const children = [...node.children];
+          const targetIndex = children.findIndex(c => c.path === targetPath);
+
+          if (targetIndex === -1) return node;
+
+          const swapIndex = direction === 'up' ? targetIndex - 1 : targetIndex + 1;
+
+          if (swapIndex >= 0 && swapIndex < children.length) {
+              [children[targetIndex], children[swapIndex]] = [children[swapIndex], children[targetIndex]];
+          }
+          return { ...node, children };
+      }
+
+      return {
+          ...node,
+          children: node.children.map(child => reorderInChildren(child, parentPath, targetPath, direction))
+      };
+  };
+  
+  const handleReorderCategory = (path: string, direction: 'up' | 'down') => {
+      const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+      const newTree = reorderInChildren(deepClone(categoryTree), parentPath, path, direction);
+      setCategoryTree(newTree);
+  };
+  
+  const handleToggleReorderMode = () => {
+      if (isReorderMode) {
+          const flattenTree = (node: CategoryNode): string[] => {
+              const paths = node.path ? [node.path] : [];
+              return [...paths, ...node.children.flatMap(flattenTree)];
+          };
+          const orderedPaths = flattenTree(categoryTree);
+          setPersistedCategories(orderedPaths);
+          updateCategoryOrder(orderedPaths)
+              .then(() => toast({ title: t('success'), description: t('order_saved') }))
+              .catch((e) => toast({ variant: 'destructive', title: t('error'), description: (e as Error).message }));
+      }
+      setIsReorderMode(!isReorderMode);
+  };
+
 
   return (
     <div className={cn("flex h-screen bg-background")}>
@@ -504,6 +572,9 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         onLogout={handleLogout}
         onMemorialClick={() => setShowMemorialDialog(true)}
         onHealingClick={() => setShowHealingDialog(true)}
+        isReorderMode={isReorderMode}
+        onToggleReorderMode={handleToggleReorderMode}
+        onReorderCategory={handleReorderCategory}
       />
       
       <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -524,6 +595,9 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
             onLogout={handleLogout}
             onMemorialClick={() => setShowMemorialDialog(true)}
             onHealingClick={() => setShowHealingDialog(true)}
+            isReorderMode={isReorderMode}
+            onToggleReorderMode={handleToggleReorderMode}
+            onReorderCategory={handleReorderCategory}
           />
         </SheetContent>
       </Sheet>
@@ -555,7 +629,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         dialogState={dialogState}
         onClose={handleCloseDialog}
         onSubmit={handleSubmit}
-        allCategories={categories.filter(c => c !== 'All')}
+        allCategories={persistedCategories}
         isSubmitting={isSubmitting}
       />
       <DeleteCategoryDialog

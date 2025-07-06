@@ -1,6 +1,6 @@
 
 import { Button } from './ui/button';
-import { Plus, LogOut, BookOpenCheck, HeartPulse } from 'lucide-react';
+import { Plus, LogOut, BookOpenCheck, HeartPulse, Rows3, Check } from 'lucide-react';
 import type { CategoryNode } from '@/lib/types';
 import CategoryTreeItem from './category-tree-item';
 import { ScrollArea } from './ui/scroll-area';
@@ -22,6 +22,9 @@ type AppSidebarProps = {
   onLogout: () => void;
   onMemorialClick: () => void;
   onHealingClick: () => void;
+  isReorderMode: boolean;
+  onToggleReorderMode: () => void;
+  onReorderCategory: (path: string, direction: 'up' | 'down') => void;
 };
 
 export default function AppSidebar({
@@ -36,7 +39,10 @@ export default function AppSidebar({
   isAuthenticated,
   onLogout,
   onMemorialClick,
-  onHealingClick
+  onHealingClick,
+  isReorderMode,
+  onToggleReorderMode,
+  onReorderCategory
 }: AppSidebarProps) {
   const { t, dir } = useLanguage();
 
@@ -59,10 +65,16 @@ export default function AppSidebar({
       <div className="flex items-center justify-between px-2 py-1 mt-4">
         <h2 className="text-sm font-semibold text-muted-foreground">{t('categories')}</h2>
         {isAuthenticated && (
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAddCategory('')}>
-            <Plus className="h-4 w-4" />
-            <span className="sr-only">{t('add_root_category')}</span>
-          </Button>
+            <div className="flex items-center">
+                 <Button variant={isReorderMode ? "secondary" : "ghost"} size="icon" className="h-7 w-7" onClick={onToggleReorderMode}>
+                    {isReorderMode ? <Check className="h-4 w-4" /> : <Rows3 className="h-4 w-4" />}
+                    <span className="sr-only">{isReorderMode ? t('done') : t('reorder')}</span>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onAddCategory('')}>
+                    <Plus className="h-4 w-4" />
+                    <span className="sr-only">{t('add_root_category')}</span>
+                </Button>
+            </div>
         )}
       </div>
       <ScrollArea className="flex-1">
@@ -80,7 +92,7 @@ export default function AppSidebar({
                 {t('all_items')}
             </button>
 
-            {categoryTree.children.map((node) => (
+            {categoryTree.children.map((node, index) => (
                 <CategoryTreeItem
                     key={node.path}
                     node={node}
@@ -91,6 +103,10 @@ export default function AppSidebar({
                     onDeleteCategory={onDeleteCategory}
                     onEditCategory={onEditCategory}
                     isAuthenticated={isAuthenticated}
+                    isReorderMode={isReorderMode}
+                    onReorderCategory={onReorderCategory}
+                    index={index}
+                    siblingsCount={categoryTree.children.length}
                 />
             ))}
         </div>

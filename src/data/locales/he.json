@@ -158,5 +158,8 @@
   "title_desc": "כותרת (ת-א)",
   "filter_by_type": "סינון לפי סוג",
   "filter_by_tag": "סינון לפי תגית",
-  "all_types": "כל הסוגים"
+  "all_types": "כל הסוגים",
+  "reorder": "סדר מחדש",
+  "done": "סיום",
+  "order_saved": "הסדר החדש נשמר בהצלחה."
 }

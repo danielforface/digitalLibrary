@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Folder, ChevronRight, Plus, Trash2, MoreVertical, Move, Edit } from 'lucide-react';
+import { Folder, ChevronRight, Plus, Trash2, MoreVertical, Move, Edit, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CategoryNode } from '@/lib/types';
 import { Button } from './ui/button';
@@ -24,6 +24,10 @@ type CategoryTreeItemProps = {
   onEditCategory: (node: CategoryNode) => void;
   level?: number;
   isAuthenticated: boolean;
+  isReorderMode: boolean;
+  onReorderCategory: (path: string, direction: 'up' | 'down') => void;
+  index: number;
+  siblingsCount: number;
 };
 
 export default function CategoryTreeItem({
@@ -36,6 +40,10 @@ export default function CategoryTreeItem({
   onEditCategory,
   level = 0,
   isAuthenticated,
+  isReorderMode,
+  onReorderCategory,
+  index,
+  siblingsCount
 }: CategoryTreeItemProps) {
   const { t, dir } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -125,41 +133,56 @@ export default function CategoryTreeItem({
         </button>
         
         {isAuthenticated && (
-            <div className={cn("opacity-0 group-hover:opacity-100 transition-opacity flex items-center shrink-0 pr-1", dir === 'rtl' && 'pl-1 pr-0')}>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
-                            <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">{t('more_options')}</span>
+            <div className={cn(
+                "transition-opacity flex items-center shrink-0 pr-1", 
+                dir === 'rtl' && 'pl-1 pr-0',
+                !isReorderMode && 'opacity-0 group-hover:opacity-100'
+            )}>
+                {isReorderMode ? (
+                    <div className="flex items-center">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onReorderCategory(node.path, 'up')} disabled={index === 0}>
+                            <ArrowUp className="h-4 w-4" />
                         </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align={dir === 'rtl' ? 'start' : 'end'} onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={handleAdd}>
-                            <Plus className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
-                            <span>{t('add_subcategory')}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleEdit}>
-                            <Edit className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
-                            <span>{t('edit_category_btn')}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleMove}>
-                            <Move className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
-                            <span>{t('move_category_btn')}</span>
-                        </DropdownMenuItem>
-                        {node.path && (
-                            <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                                <Trash2 className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
-                                <span>{t('delete_category_btn')}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onReorderCategory(node.path, 'down')} disabled={index === siblingsCount - 1}>
+                            <ArrowDown className="h-4 w-4" />
+                        </Button>
+                    </div>
+                ) : (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">{t('more_options')}</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align={dir === 'rtl' ? 'start' : 'end'} onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={handleAdd}>
+                                <Plus className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                                <span>{t('add_subcategory')}</span>
                             </DropdownMenuItem>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            <DropdownMenuItem onClick={handleEdit}>
+                                <Edit className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                                <span>{t('edit_category_btn')}</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleMove}>
+                                <Move className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                                <span>{t('move_category_btn')}</span>
+                            </DropdownMenuItem>
+                            {node.path && (
+                                <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                    <Trash2 className={cn('h-4 w-4', dir === 'rtl' ? 'ml-2' : 'mr-2')} />
+                                    <span>{t('delete_category_btn')}</span>
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </div>
         )}
       </div>
       {isExpanded && hasChildren && (
         <div className="mt-1">
-          {node.children.map((child) => (
+          {node.children.map((child, childIndex) => (
             <CategoryTreeItem
               key={child.path}
               node={child}
@@ -171,6 +194,10 @@ export default function CategoryTreeItem({
               onEditCategory={onEditCategory}
               level={level + 1}
               isAuthenticated={isAuthenticated}
+              isReorderMode={isReorderMode}
+              onReorderCategory={onReorderCategory}
+              index={childIndex}
+              siblingsCount={node.children.length}
             />
           ))}
         </div>
