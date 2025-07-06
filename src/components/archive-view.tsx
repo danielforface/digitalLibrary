@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import CategoryCard from './category-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 type ArchiveViewProps = {
   items: ArchiveItem[];
@@ -56,7 +57,7 @@ export default function ArchiveView({
   const { t, dir } = useLanguage();
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
-  const TAG_LIMIT = 5;
+  const TAG_LIMIT = 10;
   const visibleTags = tagsExpanded ? availableTags : availableTags.slice(0, TAG_LIMIT);
   const displayTitle = categoryTitle === 'All' ? t('all_items') : categoryTitle.split('/').pop();
 
@@ -76,79 +77,87 @@ export default function ArchiveView({
         </Button>
       </header>
 
-      <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4 mb-6 p-4 border rounded-lg bg-secondary/30">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Label htmlFor="sort-select" className="flex-shrink-0">{t('sort_by')}:</Label>
-          <Select value={sortOption} onValueChange={onSortChange}>
-            <SelectTrigger id="sort-select" className="w-full sm:w-[180px]">
-              <SelectValue placeholder={t('sort_by')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="updatedAt:desc">{t('newest')}</SelectItem>
-              <SelectItem value="updatedAt:asc">{t('oldest')}</SelectItem>
-              <SelectItem value="title:asc">{t('title_asc')}</SelectItem>
-              <SelectItem value="title:desc">{t('title_desc')}</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col gap-4 mb-6 p-4 border rounded-lg bg-secondary/30">
+        <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Label htmlFor="sort-select" className="flex-shrink-0">{t('sort_by')}:</Label>
+              <Select value={sortOption} onValueChange={onSortChange}>
+                <SelectTrigger id="sort-select" className="w-full sm:w-[180px]">
+                  <SelectValue placeholder={t('sort_by')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="updatedAt:desc">{t('newest')}</SelectItem>
+                  <SelectItem value="updatedAt:asc">{t('oldest')}</SelectItem>
+                  <SelectItem value="title:asc">{t('title_asc')}</SelectItem>
+                  <SelectItem value="title:desc">{t('title_desc')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Label htmlFor="type-filter-select" className="flex-shrink-0">{t('filter_by_type')}:</Label>
+              <Select value={typeFilter} onValueChange={(value) => onTypeFilterChange(value as FileType | 'all')}>
+                <SelectTrigger id="type-filter-select" className="w-full sm:w-[180px]">
+                  <SelectValue placeholder={t('filter_by_type')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('all_types')}</SelectItem>
+                  <SelectItem value="text">{t('text')}</SelectItem>
+                  <SelectItem value="image">{t('image')}</SelectItem>
+                  <SelectItem value="audio">{t('audio')}</SelectItem>
+                  <SelectItem value="video">{t('video')}</SelectItem>
+                  <SelectItem value="pdf">{t('pdf')}</SelectItem>
+                  <SelectItem value="word">{t('word')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Label htmlFor="type-filter-select" className="flex-shrink-0">{t('filter_by_type')}:</Label>
-          <Select value={typeFilter} onValueChange={(value) => onTypeFilterChange(value as FileType | 'all')}>
-            <SelectTrigger id="type-filter-select" className="w-full sm:w-[180px]">
-              <SelectValue placeholder={t('filter_by_type')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('all_types')}</SelectItem>
-              <SelectItem value="text">{t('text')}</SelectItem>
-              <SelectItem value="image">{t('image')}</SelectItem>
-              <SelectItem value="audio">{t('audio')}</SelectItem>
-              <SelectItem value="video">{t('video')}</SelectItem>
-              <SelectItem value="pdf">{t('pdf')}</SelectItem>
-              <SelectItem value="word">{t('word')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {availableTags.length > 0 && (
+            <>
+                <Separator className="bg-border/60" />
+                <div>
+                    <Label className="text-sm font-medium">{t('filter_by_tag')}:</Label>
+                    <div className="flex items-center gap-2 flex-wrap mt-2">
+                    <button
+                        onClick={() => onSelectTag(null)}
+                        className={cn(
+                            'px-3 py-1 text-sm rounded-full transition-colors',
+                            !selectedTag
+                            ? 'bg-primary/20 text-primary font-semibold ring-1 ring-primary'
+                            : 'bg-secondary hover:bg-secondary/80'
+                        )}
+                        >
+                        {t('all_tags')}
+                    </button>
+                    {visibleTags.map(tag => (
+                        <button
+                            key={tag}
+                            onClick={() => onSelectTag(tag)}
+                            className={cn(
+                                'px-3 py-1 text-sm rounded-full transition-colors',
+                                selectedTag === tag
+                                ? 'bg-primary/20 text-primary font-semibold ring-1 ring-primary'
+                                : 'bg-secondary hover:bg-secondary/80'
+                            )}
+                        >
+                            {tag}
+                        </button>
+                    ))}
+                    {availableTags.length > TAG_LIMIT && (
+                        <button
+                            onClick={() => setTagsExpanded(!tagsExpanded)}
+                            className="flex items-center gap-1 px-3 py-1 text-sm rounded-full text-muted-foreground hover:bg-secondary transition-colors"
+                        >
+                            {tagsExpanded ? t('show_less') : t('show_more', {count: availableTags.length - TAG_LIMIT})}
+                            {tagsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                    )}
+                    </div>
+                </div>
+            </>
+        )}
       </div>
-
-      {availableTags.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => onSelectTag(null)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                !selectedTag
-                  ? 'bg-secondary text-secondary-foreground font-semibold'
-                  : 'bg-secondary/50 hover:bg-secondary'
-              }`}
-            >
-              {t('all_tags')}
-            </button>
-            {visibleTags.map(tag => (
-              <button
-                key={tag}
-                onClick={() => onSelectTag(tag)}
-                className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                  selectedTag === tag
-                    ? 'bg-secondary text-secondary-foreground font-semibold'
-                    : 'bg-secondary/50 hover:bg-secondary'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-            {availableTags.length > TAG_LIMIT && (
-              <button
-                onClick={() => setTagsExpanded(!tagsExpanded)}
-                className="flex items-center gap-1 px-3 py-1 text-sm rounded-full text-muted-foreground hover:bg-secondary/80 transition-colors"
-              >
-                {tagsExpanded ? t('show_less') : t('show_more', {count: availableTags.length - TAG_LIMIT})}
-                {tagsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
       
       {subCategories.length > 0 || items.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">

@@ -157,5 +157,6 @@
   "title_asc": "Title (A-Z)",
   "title_desc": "Title (Z-A)",
   "filter_by_type": "Filter by type",
+  "filter_by_tag": "Filter by tag",
   "all_types": "All Types"
 }
