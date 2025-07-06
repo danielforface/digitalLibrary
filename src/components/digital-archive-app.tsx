@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import type { ArchiveItem, CategoryNode } from '@/lib/types';
+import type { ArchiveItem, CategoryNode, FileType } from '@/lib/types';
 import AppSidebar from '@/components/app-sidebar';
 import ArchiveView from '@/components/archive-view';
 import ItemDialog from './item-dialog';
@@ -86,12 +86,14 @@ type DigitalArchiveAppProps = {
 }
 
 export default function DigitalArchiveApp({ initialItems, initialCategories }: DigitalArchiveAppProps) {
-  const { t, dir } = useLanguage();
+  const { t, dir, lang } = useLanguage();
   const [items, setItems] = useState<ArchiveItem[]>(initialItems);
   const [persistedCategories, setPersistedCategories] = useState<string[]>(initialCategories);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState<string>('updatedAt:desc');
+  const [typeFilter, setTypeFilter] = useState<FileType | 'all'>('all');
   const [dialogState, setDialogState] = useState<DialogState>({ open: false, mode: 'new' });
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [nowPlaying, setNowPlaying] = useState<ArchiveItem | null>(null);
@@ -165,12 +167,35 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
     return { displayedSubCategories: subCategories, displayedItems: directItems };
   }, [items, selectedCategory, categoryTree]);
   
-  const filteredAndTaggedItems = useMemo(() => {
-      if (!selectedTag) {
-          return displayedItems;
+  const processedItems = useMemo(() => {
+      let itemsToProcess = [...displayedItems];
+
+      // 1. Filter by type
+      if (typeFilter !== 'all') {
+          itemsToProcess = itemsToProcess.filter(item => item.type === typeFilter);
       }
-      return displayedItems.filter(item => item.tags?.includes(selectedTag));
-  }, [displayedItems, selectedTag]);
+
+      // 2. Filter by tag
+      if (selectedTag) {
+          itemsToProcess = itemsToProcess.filter(item => item.tags?.includes(selectedTag));
+      }
+
+      // 3. Sort
+      const [sortBy, sortOrder] = sortOption.split(':');
+      itemsToProcess.sort((a, b) => {
+          if (sortBy === 'title') {
+              const comparison = a.title.localeCompare(b.title, lang, { sensitivity: 'base' });
+              return sortOrder === 'asc' ? comparison : -comparison;
+          }
+          // Default to date sorting for 'updatedAt'
+          const dateA = new Date(a.updatedAt).getTime();
+          const dateB = new Date(b.updatedAt).getTime();
+          return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+
+      return itemsToProcess;
+  }, [displayedItems, typeFilter, selectedTag, sortOption, lang]);
+
 
   const availableTags = useMemo(() => {
     const allTags = displayedItems.flatMap(item => item.tags || []);
@@ -506,7 +531,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
       <div className="flex-1 flex flex-col overflow-hidden">
         {nowPlaying && <MiniAudioPlayer item={nowPlaying} onClose={() => setNowPlaying(null)} />}
         <ArchiveView
-          items={filteredAndTaggedItems}
+          items={processedItems}
           subCategories={displayedSubCategories}
           onUpload={() => handleProtectedAction(() => handleOpenDialog('new'))}
           onView={handleViewItem}
@@ -520,6 +545,10 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
           onSelectTag={setSelectedTag}
           onSelectCategory={handleSelectCategory}
           isAuthenticated={isAuthenticated}
+          sortOption={sortOption}
+          onSortChange={setSortOption}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
         />
       </div>
       <ItemDialog

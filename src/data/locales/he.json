@@ -150,5 +150,12 @@
   "no_html_in_clipboard": "לא נמצא טקסט מעוצב (HTML) בלוח ההדבקה.",
   "permission_denied": "ההרשאה נדחתה",
   "clipboard_permission_denied_desc": "לא ניתן לגשת ללוח ההדבקה. אנא אשר את ההרשאה בדפדפן.",
-  "unexpected_clipboard_error": "אירעה שגיאה בלתי צפויה בעת הקריאה מלוח ההדבקה."
+  "unexpected_clipboard_error": "אירעה שגיאה בלתי צפויה בעת הקריאה מלוח ההדבקה.",
+  "sort_by": "מיון לפי",
+  "newest": "החדש ביותר",
+  "oldest": "הישן ביותר",
+  "title_asc": "כותרת (א-ת)",
+  "title_desc": "כותרת (ת-א)",
+  "filter_by_type": "סינון לפי סוג",
+  "all_types": "כל הסוגים"
 }

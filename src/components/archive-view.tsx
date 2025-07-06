@@ -2,14 +2,15 @@
 'use client';
 
 import { useState } from 'react';
-import type { ArchiveItem, CategoryNode } from '@/lib/types';
+import type { ArchiveItem, CategoryNode, FileType } from '@/lib/types';
 import ArchiveCard from './archive-card';
 import { Button } from './ui/button';
 import { Menu, Upload, ChevronDown, ChevronUp } from 'lucide-react';
-import { Badge } from './ui/badge';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import CategoryCard from './category-card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
 
 type ArchiveViewProps = {
   items: ArchiveItem[];
@@ -26,9 +27,32 @@ type ArchiveViewProps = {
   onSelectTag: (tag: string | null) => void;
   onSelectCategory: (category: string) => void;
   isAuthenticated: boolean;
+  sortOption: string;
+  onSortChange: (value: string) => void;
+  typeFilter: FileType | 'all';
+  onTypeFilterChange: (value: FileType | 'all') => void;
 };
 
-export default function ArchiveView({ items, subCategories, onUpload, onView, onEdit, onMove, onDeleteRequest, categoryTitle, onMenuClick, availableTags, selectedTag, onSelectTag, onSelectCategory, isAuthenticated }: ArchiveViewProps) {
+export default function ArchiveView({ 
+  items, 
+  subCategories, 
+  onUpload, 
+  onView, 
+  onEdit, 
+  onMove, 
+  onDeleteRequest, 
+  categoryTitle, 
+  onMenuClick, 
+  availableTags, 
+  selectedTag, 
+  onSelectTag, 
+  onSelectCategory, 
+  isAuthenticated,
+  sortOption,
+  onSortChange,
+  typeFilter,
+  onTypeFilterChange
+}: ArchiveViewProps) {
   const { t, dir } = useLanguage();
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
@@ -51,6 +75,41 @@ export default function ArchiveView({ items, subCategories, onUpload, onView, on
           {isAuthenticated ? t('upload_content') : t('admin_login')}
         </Button>
       </header>
+
+      <div className="flex flex-col sm:flex-row flex-wrap items-center gap-4 mb-6 p-4 border rounded-lg bg-secondary/30">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Label htmlFor="sort-select" className="flex-shrink-0">{t('sort_by')}:</Label>
+          <Select value={sortOption} onValueChange={onSortChange}>
+            <SelectTrigger id="sort-select" className="w-full sm:w-[180px]">
+              <SelectValue placeholder={t('sort_by')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updatedAt:desc">{t('newest')}</SelectItem>
+              <SelectItem value="updatedAt:asc">{t('oldest')}</SelectItem>
+              <SelectItem value="title:asc">{t('title_asc')}</SelectItem>
+              <SelectItem value="title:desc">{t('title_desc')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Label htmlFor="type-filter-select" className="flex-shrink-0">{t('filter_by_type')}:</Label>
+          <Select value={typeFilter} onValueChange={(value) => onTypeFilterChange(value as FileType | 'all')}>
+            <SelectTrigger id="type-filter-select" className="w-full sm:w-[180px]">
+              <SelectValue placeholder={t('filter_by_type')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('all_types')}</SelectItem>
+              <SelectItem value="text">{t('text')}</SelectItem>
+              <SelectItem value="image">{t('image')}</SelectItem>
+              <SelectItem value="audio">{t('audio')}</SelectItem>
+              <SelectItem value="video">{t('video')}</SelectItem>
+              <SelectItem value="pdf">{t('pdf')}</SelectItem>
+              <SelectItem value="word">{t('word')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {availableTags.length > 0 && (
         <div className="mb-6">

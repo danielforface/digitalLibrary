@@ -150,5 +150,12 @@
   "no_html_in_clipboard": "No formatted text (HTML) was found on your clipboard.",
   "permission_denied": "Permission Denied",
   "clipboard_permission_denied_desc": "Could not access the clipboard. Please grant permission in your browser.",
-  "unexpected_clipboard_error": "An unexpected error occurred while reading from the clipboard."
+  "unexpected_clipboard_error": "An unexpected error occurred while reading from the clipboard.",
+  "sort_by": "Sort by",
+  "newest": "Newest",
+  "oldest": "Oldest",
+  "title_asc": "Title (A-Z)",
+  "title_desc": "Title (Z-A)",
+  "filter_by_type": "Filter by type",
+  "all_types": "All Types"
 }

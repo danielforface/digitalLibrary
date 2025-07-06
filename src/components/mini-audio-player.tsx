@@ -19,7 +19,7 @@ export default function MiniAudioPlayer({ item, onClose }: MiniAudioPlayerProps)
       <div className="flex-grow min-w-0">
         <p className="font-semibold truncate">{item.title}</p>
       </div>
-      <audio controls autoPlay src={item.url} className="h-10 rounded-md" />
+      <audio controls autoPlay src={item.url} className="h-10 rounded-md" preload="metadata" />
       <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-primary/10 h-9 w-9 flex-shrink-0">
         <X className="h-5 w-5" />
         <span className="sr-only">{t('close_player')}</span>
