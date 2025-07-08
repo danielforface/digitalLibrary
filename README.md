@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="favicon.ico" alt="Logo" width="128" height="128" data-ai-hint="archive logo">
+  <img src="data/logo.png" alt="Logo" width="128" height="128" data-ai-hint="archive logo">
 
   <h1 align="center">The Digital Archive</h1>
 
