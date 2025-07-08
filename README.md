@@ -19,7 +19,7 @@
 
 ## About The Project
 
-![Project Screenshot]("/data/screenshoot.png")
+![Project Screenshot](data/screenshoot.png)
 
 This project provides a sophisticated digital archive platform built with Next.js and a modern tech stack. It provides an intuitive interface for administrators to upload, categorize, tag, and manage a wide variety of content. The public-facing side offers a clean, navigable experience for users to explore the archive's treasures.
 
