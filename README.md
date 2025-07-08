@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://placehold.co/128x128.png" alt="Logo" width="128" height="128" data-ai-hint="archive logo">
 
-  <h1 align="center">אמרי נכוחים - The Digital Archive</h1>
+  <h1 align="center">The Digital Archive</h1>
 
   <p align="center">
     A modern, feature-rich digital archive for managing and preserving text, media, and documents.
@@ -19,9 +19,9 @@
 
 ## About The Project
 
-![Project Screenshot](https://placehold.co/800x450.png?text=Amrei+Nekhohim+Screenshot)
+![Project Screenshot](https://placehold.co/800x450.png?text=Digital+Archive+Screenshot)
 
-"**אמרי נכוחים**" is a sophisticated digital archive platform built with Next.js and a modern tech stack. It provides an intuitive interface for administrators to upload, categorize, tag, and manage a wide variety of content. The public-facing side offers a clean, navigable experience for users to explore the archive's treasures.
+This project provides a sophisticated digital archive platform built with Next.js and a modern tech stack. It provides an intuitive interface for administrators to upload, categorize, tag, and manage a wide variety of content. The public-facing side offers a clean, navigable experience for users to explore the archive's treasures.
 
 The project is designed to be highly customizable, multilingual (English and Hebrew), and fully featured for robust content management.
 
@@ -78,12 +78,14 @@ To get a local copy up and running, follow these simple steps.
 3.  **Configure Environment Variables:**
     Create a file named `.env.local` in the root of your project directory. This file is for local configuration and should not be committed to version control.
 
-    Add the admin password to this file:
+    Add the following variables to this file:
     ```env
     # .env.local
     ADMIN_PASSWORD="your-secret-password-here"
+    NEXT_PUBLIC_ARCHIVE_NAME="Your Archive Name"
     ```
-    This password will be used to log in to the admin panel.
+    - `ADMIN_PASSWORD`: This password will be used to log in to the admin panel.
+    - `NEXT_PUBLIC_ARCHIVE_NAME`: This sets the public name of the archive site. The default is "אמרי נכוחים".
 
 ### Running the Application
 

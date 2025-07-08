@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 import { LanguageProvider } from '@/context/language-context';
 
 export const metadata: Metadata = {
-  title: 'אמרי נכוחים',
-  description: 'ארכיון התוכן של אמרי נכוחים',
+  title: process.env.NEXT_PUBLIC_ARCHIVE_NAME || 'אמרי נכוחים',
+  description: `The content archive of ${process.env.NEXT_PUBLIC_ARCHIVE_NAME || 'אמרי נכוחים'}`,
 };
 
 export default function RootLayout({

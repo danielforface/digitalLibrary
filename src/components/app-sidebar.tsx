@@ -51,7 +51,7 @@ export default function AppSidebar({
       <div className="p-2 flex flex-col items-center text-center">
         <div className="flex items-center gap-2 justify-center">
           <BookOpenCheck className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-headline font-bold text-primary">{'אמרי נכוחים'}</h1>
+          <h1 className="text-2xl font-headline font-bold text-primary">{process.env.NEXT_PUBLIC_ARCHIVE_NAME || 'אמרי נכוחים'}</h1>
         </div>
         <div className="flex items-center justify-center gap-4 mt-4">
             <Button variant="ghost" className="h-14 w-14 p-0 hover:bg-transparent" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
