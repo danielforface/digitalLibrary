@@ -9,6 +9,7 @@ import { Menu, Upload, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 import { cn } from '@/lib/utils';
 import CategoryCard from './category-card';
+import BackCategoryCard from './back-category-card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -27,6 +28,7 @@ type ArchiveViewProps = {
   selectedTag: string | null;
   onSelectTag: (tag: string | null) => void;
   onSelectCategory: (category: string) => void;
+  parentCategoryPath: string | null;
   isAuthenticated: boolean;
   sortOption: string;
   onSortChange: (value: string) => void;
@@ -47,7 +49,8 @@ export default function ArchiveView({
   availableTags, 
   selectedTag, 
   onSelectTag, 
-  onSelectCategory, 
+  onSelectCategory,
+  parentCategoryPath, 
   isAuthenticated,
   sortOption,
   onSortChange,
@@ -159,8 +162,14 @@ export default function ArchiveView({
         )}
       </div>
       
-      {subCategories.length > 0 || items.length > 0 ? (
+      {subCategories.length > 0 || items.length > 0 || parentCategoryPath !== null ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          {parentCategoryPath !== null && (
+            <BackCategoryCard 
+              parentPath={parentCategoryPath}
+              onSelectCategory={onSelectCategory}
+            />
+          )}
           {subCategories.map((node) => (
             <CategoryCard
               key={node.path}

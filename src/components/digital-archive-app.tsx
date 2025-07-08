@@ -108,6 +108,17 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
   const [showHealingDialog, setShowHealingDialog] = useState(false);
   const [isReorderMode, setIsReorderMode] = useState(false);
 
+  const parentCategoryPath = useMemo(() => {
+    if (selectedCategory === 'All') {
+      return null; // No parent for "All"
+    }
+    const pathParts = selectedCategory.split('/');
+    if (pathParts.length > 1) {
+      return pathParts.slice(0, -1).join('/'); // e.g., 'a/b/c' -> 'a/b'
+    }
+    return 'All'; // e.g., 'a' -> 'All'
+  }, [selectedCategory]);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -607,6 +618,7 @@ export default function DigitalArchiveApp({ initialItems, initialCategories }: D
         <ArchiveView
           items={processedItems}
           subCategories={displayedSubCategories}
+          parentCategoryPath={parentCategoryPath}
           onUpload={() => handleProtectedAction(() => handleOpenDialog('new'))}
           onView={handleViewItem}
           onEdit={(item) => handleProtectedAction(() => handleOpenDialog('edit', item))}
