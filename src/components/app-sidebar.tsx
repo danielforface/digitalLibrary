@@ -77,8 +77,8 @@ export default function AppSidebar({
             </div>
         )}
       </div>
-      <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+      <ScrollArea className="flex-1" type="auto">
+        <div className="p-2 space-y-1 min-w-max">
             <button
                 onClick={() => onSelectCategory('All')}
                 className={cn(

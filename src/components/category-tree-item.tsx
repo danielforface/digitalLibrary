@@ -123,13 +123,13 @@ export default function CategoryTreeItem({
         <button
           onClick={handleSelect}
           className={cn(
-            'flex flex-1 items-center gap-2 py-2 truncate',
+            'flex flex-1 items-center gap-2 py-2',
             dir === 'rtl' ? 'text-right flex-row-reverse' : 'text-left',
             selectedCategory === node.path ? 'text-primary font-semibold' : 'text-foreground/80'
           )}
         >
           <Folder className="h-4 w-4 shrink-0" />
-          <span className="truncate">{node.name}</span>
+          <span className="whitespace-nowrap">{node.name}</span>
         </button>
         
         {isAuthenticated && (
