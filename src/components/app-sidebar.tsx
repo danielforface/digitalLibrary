@@ -54,10 +54,10 @@ export default function AppSidebar({
           <h1 className="text-2xl font-headline font-bold text-primary">{'אמרי נכוחים'}</h1>
         </div>
         <div className="flex items-center justify-center gap-4 mt-4">
-            <Button variant="ghost" className="h-14 w-14 p-0" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
+            <Button variant="ghost" className="h-14 w-14 p-0 hover:bg-transparent" onClick={onMemorialClick} aria-label={t('memorial_candle')}>
                 <MemorialCandleIcon />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onHealingClick} aria-label={t('healing_prayer')}>
+            <Button variant="ghost" size="icon" className="hover:bg-transparent" onClick={onHealingClick} aria-label={t('healing_prayer')}>
                 <HeartPulse className="h-6 w-6 text-destructive" />
             </Button>
         </div>
