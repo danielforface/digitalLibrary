@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://placehold.co/128x128.png" alt="Logo" width="128" height="128" data-ai-hint="archive logo">
+  <img src="favicon.ico" alt="Logo" width="128" height="128" data-ai-hint="archive logo">
 
   <h1 align="center">The Digital Archive</h1>
 
